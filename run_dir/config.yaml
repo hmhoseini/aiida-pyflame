@@ -1,0 +1,33 @@
+api_key:
+
+aiida_settings:
+  DFT_code_string:
+  FLAME_code_string:
+  VASP_potential_family:
+
+job_script:
+  geopt:
+    number_of_jobs: 10
+    nodes:
+    ntasks:
+    ncpu:
+    time: #in s
+  gensymcrys:
+    number_of_jobs: 3
+    nodes:
+    ntasks:
+    time: #in s
+  train:
+    number_of_jobs: 3
+    nodes:
+    ntasks:
+    time:
+  minimahopping:
+    number_of_jobs:
+    nodes: 1
+    ntasks: 1 # only serial
+  divcheck:
+    number_of_jobs: 3
+    nodes:
+    ntasks:
+    time:

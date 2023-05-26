@@ -1,0 +1,357 @@
+opt1:
+  kpoints_distance: 0.8
+  basis_pseudo: dzvp-pbe-gth.yml
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: ScaLAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: QUICKSTEP
+    STRESS_TENSOR: ANALYTICAL
+    DFT:
+      BASIS_SET_FILE_NAME:
+        - GTH_BASIS_SETS
+        - BASIS_MOLOPT
+        - BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME:
+        - GTH_POTENTIALS
+      UKS:          False
+      CHARGE:       0
+      MGRID:
+        CUTOFF:      400
+        REL_CUTOFF:  40
+        NGRIDS:      4
+      QS:
+        METHOD: GPW
+        EPS_DEFAULT:   1.0E-10
+        EXTRAPOLATION: ASPC
+      SCF:
+        MAX_SCF: 50
+        EPS_SCF:       1.0E-5
+        MAX_ITER_LUMO: 10000
+        OUTER_SCF:
+          MAX_SCF:   10
+          EPS_SCF:   1.0E-5
+        PRINT:
+          RESTART:
+            BACKUP_COPIES: 0
+            EACH:
+              QS_SCF: 25        
+      POISSON:
+        PERIODIC: XYZ
+      XC:
+        XC_FUNCTIONAL:
+          PBE:
+            PARAMETRIZATION: ORIG
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        _: 'OFF'      
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'OFF'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'OFF'
+      STRESS:
+        _: 'OFF'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
+      RMS_FORCE: 0.01
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+opt1vc:
+  kpoints_distance: 0.8
+  basis_pseudo: dzvp-pbe-gth.yml
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: ScaLAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: QUICKSTEP
+    STRESS_TENSOR: ANALYTICAL
+    DFT:
+      BASIS_SET_FILE_NAME:
+        - GTH_BASIS_SETS
+        - BASIS_MOLOPT
+        - BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME:
+        - GTH_POTENTIALS
+      UKS:          False
+      CHARGE:       0
+      MGRID:
+        CUTOFF:      400
+        REL_CUTOFF:  40
+        NGRIDS:      4
+      QS:
+        METHOD: GPW
+        EPS_DEFAULT:   1.0E-10
+        EXTRAPOLATION: ASPC
+      SCF:
+        MAX_SCF: 50
+        EPS_SCF:       1.0E-5
+        MAX_ITER_LUMO: 10000
+        OUTER_SCF:
+          MAX_SCF:   10
+          EPS_SCF:   1.0E-5
+        PRINT:
+          RESTART:
+            BACKUP_COPIES: 0
+            EACH:
+              QS_SCF: 25
+      POISSON:
+        PERIODIC: XYZ
+        POISSON_SOLVER: PERIODIC
+      XC:
+        XC_FUNCTIONAL:
+          PBE:
+            PARAMETRIZATION: ORIG
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        _: 'OFF'
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'OFF'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'OFF'
+      STRESS:
+        _: 'OFF'
+    CELL_OPT:
+      TYPE: DIRECT_CELL_OPT
+      EXTERNAL_PRESSURE:  "[bar] 0.0"
+      PRESSURE_TOLERANCE: 200
+      OPTIMIZER: CG
+      MAX_ITER:  200
+      MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
+      RMS_FORCE: 0.005 
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+opt2:
+  kpoints_distance: 0.4
+  basis_pseudo: dzvp-pbe-gth.yml
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: ScaLAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: QUICKSTEP
+    STRESS_TENSOR: ANALYTICAL
+    DFT:
+      BASIS_SET_FILE_NAME:
+        - GTH_BASIS_SETS
+        - BASIS_MOLOPT
+        - BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME:
+        - GTH_POTENTIALS
+      UKS:          False
+      CHARGE:       0
+      MGRID:
+        CUTOFF:      800
+        REL_CUTOFF:  40
+        NGRIDS:      4
+      QS:
+        METHOD: GPW
+        EPS_DEFAULT:   1.0E-10
+        EXTRAPOLATION: ASPC
+      SCF:
+        MAX_SCF: 50
+        EPS_SCF:       1.0E-5
+        MAX_ITER_LUMO: 10000
+        OUTER_SCF:
+          MAX_SCF:   10
+          EPS_SCF:   1.0E-5
+        PRINT:
+          RESTART:
+            BACKUP_COPIES: 0
+            EACH:
+              QS_SCF: 25
+      POISSON:
+        PERIODIC: XYZ
+        POISSON_SOLVER: PERIODIC
+      XC:
+        XC_FUNCTIONAL:
+          PBE:
+            PARAMETRIZATION: ORIG
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        FORMAT: XYZ
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'ON'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'ON'
+      STRESS:
+        _: 'ON'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0058"  # 0.3 eV/A
+      RMS_FORCE: 0.005
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+scaled_bulk:
+  kpoints_distance: 0.4
+  basis_pseudo: dzvp-pbe-gth.yml
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: ScaLAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: QUICKSTEP
+    STRESS_TENSOR: ANALYTICAL
+    DFT:
+      BASIS_SET_FILE_NAME:
+        - GTH_BASIS_SETS
+        - BASIS_MOLOPT
+        - BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME:
+        - GTH_POTENTIALS
+      UKS:          False
+      CHARGE:       0
+      MGRID:
+        CUTOFF:      800
+        REL_CUTOFF:  40
+        NGRIDS:      4
+      QS:
+        METHOD: GPW
+        EPS_DEFAULT:   1.0E-10
+        EXTRAPOLATION: ASPC
+      SCF:
+        MAX_SCF: 50
+        EPS_SCF:       1.0E-5
+        MAX_ITER_LUMO: 10000
+        OUTER_SCF:
+          MAX_SCF:   10
+          EPS_SCF:   1.0E-5
+        PRINT:
+          RESTART:
+            BACKUP_COPIES: 0
+            EACH:
+              QS_SCF: 25
+      POISSON:
+        PERIODIC: XYZ
+        POISSON_SOLVER: PERIODIC
+      XC:
+        XC_FUNCTIONAL:
+          PBE:
+            PARAMETRIZATION: ORIG
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        FORMAT: XYZ
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'ON'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'ON'
+      STRESS:
+        _: 'ON'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0097"  # 0.5 eV/A
+      RMS_FORCE: 0.009
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+bulk:
+  kpoints_distance: 0.4
+  basis_pseudo: dzvp-pbe-gth.yml
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: ScaLAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    PRINT: #only for single point calculation
+        FORCES:
+            FILENAME: s_p_forces
+            EACH:
+                JUST_ENERGY: 1
+    METHOD: QUICKSTEP
+    STRESS_TENSOR: ANALYTICAL
+    DFT:
+      BASIS_SET_FILE_NAME:
+        - GTH_BASIS_SETS
+        - BASIS_MOLOPT
+        - BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME:
+        - GTH_POTENTIALS
+      UKS:          False
+      CHARGE:       0
+      MGRID:
+        CUTOFF:      800
+        REL_CUTOFF:  40
+        NGRIDS:      4
+      QS:
+        METHOD: GPW
+        EPS_DEFAULT:   1.0E-10
+        EXTRAPOLATION: ASPC
+      SCF:
+        MAX_SCF: 50
+        EPS_SCF:       1.0E-5
+        MAX_ITER_LUMO: 10000
+        OUTER_SCF:
+          MAX_SCF:   10
+          EPS_SCF:   1.0E-5
+        PRINT:
+          RESTART:
+            BACKUP_COPIES: 0
+            EACH:
+              QS_SCF: 25
+      POISSON:
+        PERIODIC: XYZ
+        POISSON_SOLVER: PERIODIC
+      XC:
+        XC_FUNCTIONAL:
+          PBE:
+            PARAMETRIZATION: ORIG
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        FORMAT: XYZ
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'ON'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'ON'
+      STRESS:
+        _: 'ON'
+    CELL_OPT:
+      TYPE: DIRECT_CELL_OPT
+      EXTERNAL_PRESSURE:  "[bar] 0.0"
+      PRESSURE_TOLERANCE: 100
+      OPTIMIZER: CG
+      MAX_ITER:  200
+      MAX_FORCE: "[bohr^-1*hartree] 0.00058" # 0.03 eV/A
+      RMS_FORCE: 0.0009
+      MAX_DR: 0.0030
+      RMS_DR: 0.0015

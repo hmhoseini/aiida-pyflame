@@ -1,0 +1,309 @@
+opt1:
+  kpoints_distance: 0.8
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: SCALAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: SIRIUS
+    PW_DFT:
+      CONTROL:
+        VERBOSITY: 1
+        MPI_GRID_DIMS: 1 4
+        SPGLIB_TOLERANCE: 1.0E-6
+      PARAMETERS:
+        ELECTRONIC_STRUCTURE_METHOD: pseudopotential
+        USE_SYMMETRY: TRUE
+        PW_CUTOFF: 24
+        GK_CUTOFF: 6
+        NUM_DFT_ITER: 100
+        SMEARING: GAUSSIAN
+        SMEARING_WIDTH: 0.001 # Ha 0.01 eV
+        DENSITY_TOL: 1.0E-5
+      ITERATIVE_SOLVER:
+        SUBSPACE_SIZE: 4
+    DFT:
+      XC:
+        XC_FUNCTIONAL:
+          GGA_X_PBE:
+            _: ''
+          GGA_C_PBE:
+            _: ''    
+    SUBSYS:
+      CELL:
+        A: "[angstrom]"        
+        B: "[angstrom]"     
+        C: "[angstrom]"
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        _: 'OFF'      
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'OFF'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'OFF'
+      STRESS:
+        _: 'OFF'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0136"  # 0.7 eV/A
+      RMS_FORCE: 0.01
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+opt1vc:
+  kpoints_distance: 0.8
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: SCALAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: SIRIUS
+    STRESS_TENSOR: ANALYTICAL
+    PW_DFT:
+      CONTROL:
+        VERBOSITY: 1
+        MPI_GRID_DIMS: 1 4
+        SPGLIB_TOLERANCE: 1.0E-6
+      PARAMETERS: 
+        ELECTRONIC_STRUCTURE_METHOD: pseudopotential
+        USE_SYMMETRY: TRUE
+        PW_CUTOFF: 24
+        GK_CUTOFF: 6
+        NUM_DFT_ITER: 100
+        SMEARING: GAUSSIAN
+        SMEARING_WIDTH: 0.001 # Ha 0.01 eV
+        DENSITY_TOL: 1.0E-5
+      ITERATIVE_SOLVER:
+        SUBSPACE_SIZE: 4
+    DFT:
+      XC:
+        XC_FUNCTIONAL:
+          GGA_X_PBE:
+            _: ''
+          GGA_C_PBE:
+            _: ''    
+    SUBSYS:
+      CELL:
+        A: "[angstrom]"        
+        B: "[angstrom]"     
+        C: "[angstrom]"
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        _: 'OFF'
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'OFF'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'OFF'
+      STRESS:
+        _: 'OFF'
+    CELL_OPT:
+      TYPE: DIRECT_CELL_OPT
+      EXTERNAL_PRESSURE:  "[bar] 0.0"
+      OPTIMIZER: CG
+      MAX_ITER:  200
+      MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
+      RMS_FORCE: 0.005 
+      PRESSURE_TOLERANCE: 200
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+        
+opt2:
+  kpoints_distance: 0.4
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: SCALAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: SIRIUS
+    STRESS_TENSOR: ANALYTICAL
+    PW_DFT:
+      CONTROL:
+        VERBOSITY: 1
+        MPI_GRID_DIMS: 1 4
+      PARAMETERS:
+        ELECTRONIC_STRUCTURE_METHOD: pseudopotential
+        USE_SYMMETRY: TRUE
+        PW_CUTOFF: 32
+        GK_CUTOFF: 8
+        NUM_DFT_ITER: 100
+        SMEARING: GAUSSIAN
+        SMEARING_WIDTH: 0.0004 # Ha 0.01 eV
+        DENSITY_TOL: 1.0E-5
+      ITERATIVE_SOLVER:
+        SUBSPACE_SIZE: 4
+    DFT:
+      XC:
+        XC_FUNCTIONAL:
+          GGA_X_PBE:
+            _: ''
+          GGA_C_PBE:
+            _: ''    
+    SUBSYS:
+      CELL:
+        A: "[angstrom]"        
+        B: "[angstrom]"     
+        C: "[angstrom]"
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        FORMAT: XYZ
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'ON'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'ON'
+      STRESS:
+        _: 'ON'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0058"  # 0.3 eV/A
+      RMS_FORCE: 0.005
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+scaled_bulk:
+  kpoints_distance: 0.4
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: SCALAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: SIRIUS
+    STRESS_TENSOR: ANALYTICAL 
+    PW_DFT:
+      CONTROL:
+        VERBOSITY: 1
+        MPI_GRID_DIMS: 1 4
+      PARAMETERS:
+        ELECTRONIC_STRUCTURE_METHOD: pseudopotential
+        USE_SYMMETRY: TRUE
+        PW_CUTOFF: 32
+        GK_CUTOFF: 8
+        NUM_DFT_ITER: 100
+        SMEARING: GAUSSIAN
+        SMEARING_WIDTH: 0.0004 # Ha 0.01 eV
+        DENSITY_TOL: 1.0E-5
+      ITERATIVE_SOLVER:
+        SUBSPACE_SIZE: 4
+    DFT:
+      XC:
+        XC_FUNCTIONAL:
+          GGA_X_PBE:
+            _: ''
+          GGA_C_PBE:
+            _: ''    
+    SUBSYS:
+      CELL:
+        A: "[angstrom]"        
+        B: "[angstrom]"     
+        C: "[angstrom]"
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        FORMAT: XYZ
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'ON'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'ON'
+      STRESS:
+        _: 'ON'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0097"  # 0.5 eV/A
+      RMS_FORCE: 0.009
+      MAX_DR: 0.4
+      RMS_DR: 0.2
+
+bulk:
+  kpoints_distance: 0.4
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: SCALAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    PRINT: #only for single point calculation
+        FORCES:
+            FILENAME: s_p_forces
+            EACH:
+                JUST_ENERGY: 1
+    METHOD: SIRIUS
+    STRESS_TENSOR: ANALYTICAL
+    PW_DFT:
+      CONTROL:
+        VERBOSITY: 1
+        MPI_GRID_DIMS: 1 4
+      PARAMETERS:
+        ELECTRONIC_STRUCTURE_METHOD: pseudopotential
+        USE_SYMMETRY: TRUE
+        PW_CUTOFF: 32
+        GK_CUTOFF: 8
+        NUM_DFT_ITER: 100
+        SMEARING: GAUSSIAN
+        SMEARING_WIDTH: 0.0004 # Ha 0.01 eV
+        DENSITY_TOL: 1.0E-5
+      ITERATIVE_SOLVER:
+        SUBSPACE_SIZE: 4
+    DFT:
+      XC:
+        XC_FUNCTIONAL:
+          GGA_X_PBE:
+            _: ''
+          GGA_C_PBE:
+            _: ''    
+    SUBSYS:
+      CELL:
+        A: "[angstrom]"        
+        B: "[angstrom]"     
+        C: "[angstrom]"
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        FORMAT: XYZ
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'ON'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'ON'
+      STRESS:
+        _: 'ON'
+    CELL_OPT:
+      TYPE: DIRECT_CELL_OPT
+      EXTERNAL_PRESSURE:  "[bar] 0.0"
+      PRESSURE_TOLERANCE: 100
+      OPTIMIZER: CG
+      MAX_ITER:  200
+      MAX_FORCE: "[bohr^-1*hartree] 0.00058" # 0.03 eV/A
+      RMS_FORCE: 0.0009
+      MAX_DR: 0.0030
+      RMS_DR: 0.0015

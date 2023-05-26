@@ -1,0 +1,25 @@
+{
+    "author": "Hossein Mirhosseini",
+    "author_email": "mirhoseini@gmail.com",
+    "description": "AiiDA Plugin for running PyFLAME calculations",
+    "license": "",
+    "name": "aiida-pyflame",
+    "url": "https://gitlab.com/hmhoseini/PyFLAME",
+    "version": "0.0",
+    "reentry_register": true,
+    "entry_points": {
+	"aiida.calculations": [
+	    "flame = aiida_pyflame.codes.flame.flame_calculations:FlameCalculation"
+	],
+	"aiida.parsers": [
+	    "cp2k_efs_parser = aiida_pyflame.codes.cp2k.cp2k_parsers:Cp2kEFSParser",
+            "pyflame_gensymcrys_parser = aiida_pyflame.codes.flame.flame_parsers: GenSymCrysParser",
+            "pyflame_averdist_parser = aiida_pyflame.codes.flame.flame_parsers: AverDistParser",
+	    "pyflame_train_parser = aiida_pyflame.codes.flame.flame_parsers: TrainParser",
+	    "pyflame_minhocao_parser = aiida_pyflame.codes.flame.flame_parsers: MinhocaoParser",
+	    "pyflame_minhopp_parser = aiida_pyflame.codes.flame.flame_parsers: MinhoppParser",
+	    "pyflame_divcheck_parser = aiida_pyflame.codes.flame.flame_parsers: DivCheckParser"
+	],
+	"aiida.workflows": []
+    }
+}

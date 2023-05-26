@@ -1,0 +1,4 @@
+structures_group_list: ['structures_step3', 'structures_singlepoint', 'structures_minimahopping']
+workflows_group_list: ['wf_gensymcrys', 'wf_step3', 'wf_averdist', 'wf_train', 'wf_minimahopping', 'wf_divcheck', 'wf_singlepoint']
+results_group_list: ['results_step3', 'results_singlepoint']
+
