@@ -4,9 +4,15 @@
     "description": "AiiDA Plugin for running PyFLAME calculations",
     "license": "",
     "name": "aiida-pyflame",
-    "url": "https://gitlab.com/hmhoseini/PyFLAME",
+    "url": "https://github.com/hmhoseini/aiida-pyflame",
     "version": "0.0",
+    "license": "MIT license",
     "reentry_register": true,
+    "python_requires": ">=3.6",
+    "install_requires": [
+        "aiida-submission-controller",
+        "mp-api"
+    ],
     "entry_points": {
 	"aiida.calculations": [
 	    "flame = aiida_pyflame.codes.flame.flame_calculations:FlameCalculation"

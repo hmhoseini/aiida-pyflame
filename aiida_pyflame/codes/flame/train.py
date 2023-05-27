@@ -161,6 +161,8 @@ def collect_training_data(cycle_number):
     results_group = Group.get(label='results_step3') if c_no == 1 else Group.get(label='results_singlepoint')
 
     for a_node in results_group.nodes:
+        if not a_node.is_finished_ok:
+            continue
         tmp_dict = {}
         single_ionic_step = False
 
@@ -255,10 +257,6 @@ def collect_training_data(cycle_number):
         if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
             motion_step = a_node.outputs.output_parameters.dict['motion_step_info']
             for ionic_step in range(len(motion_step['step'])-1, 0, -1):
-                print(a_node.label)
-                print(a_node.pk)
-                print(len(motion_step['step']))
-                print(ionic_step)
                 if not False in found:
                     break
                 if not motion_step['scf_converged'][ionic_step]:

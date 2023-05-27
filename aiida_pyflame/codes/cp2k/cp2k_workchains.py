@@ -31,10 +31,10 @@ def get_options():
                'max_wallclock_seconds': job_script['geopt']['time']}
     return options
 
-def get_kinds_section(structure: StructureData, basis_pseudo, GTHorSIRIUS, magnetization_tags=None):
+def get_kinds_section(structure, basis_pseudo, GTHorSIRIUS, magnetization_tags=None):
     """ Write the &KIND section
     Taken from aiida-commonworkflow
-    Modfied for SIRIUS
+    Modfied for SIRIUS/GTH
     """
     kinds = []
     with open(os.path.join(settings.CP2K_input_files_path, basis_pseudo), 'rb') as fhandle:
@@ -51,7 +51,7 @@ def get_kinds_section(structure: StructureData, basis_pseudo, GTHorSIRIUS, magne
                 'BASIS_SET': atom_data['basis_set'][symbol],
                 'POTENTIAL': atom_data['pseudopotential'][symbol],
             }
-        else:
+        if 'SIRIUS' in GTHorSIRIUS:
             new_atom = {
                 '_': symbol if tag == '0' else symbol + tag,
                 'POTENTIAL': 'UPF ' + atom_data['UPF_pseudopotential'][symbol],
@@ -61,8 +61,8 @@ def get_kinds_section(structure: StructureData, basis_pseudo, GTHorSIRIUS, magne
         kinds.append(new_atom)
     return {'FORCE_EVAL': {'SUBSYS': {'KIND': kinds, 'CELL': {}}}}
 
-def get_file_section(structure: StructureData, GTHorSIRIUS):
-    """ Potential files for SIRIUS
+def get_file_section(structure, GTHorSIRIUS):
+    """ Potential files for SIRIUS/GTH
     """
     files_dict =  {}
     if 'GTH' in GTHorSIRIUS:
@@ -92,7 +92,7 @@ def get_file_section(structure: StructureData, GTHorSIRIUS):
     return files_dict
 
 def get_kpoints(kpoints_distance, structure):
-    """ kpoints for SIRIUS
+    """ kpoints for SIRIUS/GTH
     """
     KpointsData = DataFactory('array.kpoints')
     if kpoints_distance:
@@ -106,15 +106,16 @@ def construct_builder(structure, parameters, job_type, GTHorSIRIUS):
     Workflow = WorkflowFactory('cp2k.base')
     builder = Workflow.get_builder()
     builder.cp2k.structure = structure
-    kpoints_distance = parameters.pop('kpoints_distance')
+    kpoints_distance = parameters.pop('kpoints_distance', 10)
     kpoints = get_kpoints(kpoints_distance, structure)
     mesh, _ = kpoints.get_kpoints_mesh()
     if 'GTH' in GTHorSIRIUS:
         if mesh != [1, 1, 1]:
             builder.cp2k.kpoints = kpoints
         basis_pseudo = parameters.pop('basis_pseudo')
-    else:
-        parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['NGRIDK'] = '{} {} {}'.format(mesh[0], mesh[1], mesh[2])
+    if 'SIRIUS' in GTHorSIRIUS:
+        if mesh != [1, 1, 1]:
+            parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['NGRIDK'] = '{} {} {}'.format(mesh[0], mesh[1], mesh[2])
         cell = parameters['FORCE_EVAL']['SUBSYS']['CELL']
         for i, keys in enumerate(cell.keys()):
             cell[keys] = '{} {:<15} {:<15} {:<15}'.format(cell[keys],
@@ -466,7 +467,7 @@ class ClusterGeOptWorkChain(WorkChain):
         parameters_opt1c = self.ctx.protocol['opt1']
         parameters_opt1c['GLOBAL']['RUN_TYPE'] = 'GEO_OPT'
         parameters_opt1c['### JOB_TYPE'] = 'opt1c'
-        parameters_opt1c['kpoints_distance'] = 5
+        parameters_opt1c['kpoints_distance'] = 10
         # builder
         builder = construct_builder(structure, parameters_opt1c, 'opt1c', GTHorSIRIUS)
         # submit
@@ -485,7 +486,7 @@ class ClusterGeOptWorkChain(WorkChain):
         parameters_opt2c = self.ctx.protocol['opt2']
         parameters_opt2c['GLOBAL']['RUN_TYPE'] = 'GEO_OPT'
         parameters_opt2c['### JOB_TYPE'] = 'opt2_cluster'
-        parameters_opt2c['kpoints_distance'] = 5
+        parameters_opt2c['kpoints_distance'] = 10
         # builder
         builder = construct_builder(structure, parameters_opt2c, 'opt2_cluster', GTHorSIRIUS)
         # submit
@@ -532,7 +533,7 @@ class SinglePointtWorkChain(WorkChain):
         bc = self.inputs.bc.value
         if 'free' in bc:
             job_type = 'single_point_cluster'
-            parameters_s_p['kpoints_distance'] = 5
+            parameters_s_p['kpoints_distance'] = 10
         else:
             job_type = 'single_point_bulk'
         # builder

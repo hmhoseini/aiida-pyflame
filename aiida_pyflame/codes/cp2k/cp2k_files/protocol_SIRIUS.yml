@@ -56,7 +56,7 @@ opt1:
       MAX_FORCE: "[bohr^-1*hartree] 0.0136"  # 0.7 eV/A
       RMS_FORCE: 0.01
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
 
 opt1vc:
   kpoints_distance: 0.8
@@ -116,10 +116,10 @@ opt1vc:
       OPTIMIZER: CG
       MAX_ITER:  200
       MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
-      RMS_FORCE: 0.005 
+      RMS_FORCE: 0.01 
       PRESSURE_TOLERANCE: 200
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
         
 opt2:
   kpoints_distance: 0.4
@@ -179,7 +179,7 @@ opt2:
       MAX_FORCE: "[bohr^-1*hartree] 0.0058"  # 0.3 eV/A
       RMS_FORCE: 0.005
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
 
 scaled_bulk:
   kpoints_distance: 0.4
@@ -239,7 +239,7 @@ scaled_bulk:
       MAX_FORCE: "[bohr^-1*hartree] 0.0097"  # 0.5 eV/A
       RMS_FORCE: 0.009
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
 
 bulk:
   kpoints_distance: 0.4
@@ -304,6 +304,6 @@ bulk:
       OPTIMIZER: CG
       MAX_ITER:  200
       MAX_FORCE: "[bohr^-1*hartree] 0.00058" # 0.03 eV/A
-      RMS_FORCE: 0.0009
+      RMS_FORCE: 0.0005
       MAX_DR: 0.0030
-      RMS_DR: 0.0015
+      RMS_DR: 0.0030

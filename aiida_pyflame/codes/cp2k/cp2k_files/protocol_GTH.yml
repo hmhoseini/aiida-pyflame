@@ -1,74 +1,5 @@
 opt1:
-  kpoints_distance: 0.8
-  basis_pseudo: dzvp-pbe-gth.yml
-  GLOBAL:
-    PREFERRED_DIAG_LIBRARY: ScaLAPACK
-    PRINT_LEVEL: MEDIUM
-  FORCE_EVAL:
-    METHOD: QUICKSTEP
-    STRESS_TENSOR: ANALYTICAL
-    DFT:
-      BASIS_SET_FILE_NAME:
-        - GTH_BASIS_SETS
-        - BASIS_MOLOPT
-        - BASIS_MOLOPT_UCL
-      POTENTIAL_FILE_NAME:
-        - GTH_POTENTIALS
-      UKS:          False
-      CHARGE:       0
-      MGRID:
-        CUTOFF:      400
-        REL_CUTOFF:  40
-        NGRIDS:      4
-      QS:
-        METHOD: GPW
-        EPS_DEFAULT:   1.0E-10
-        EXTRAPOLATION: ASPC
-      SCF:
-        MAX_SCF: 50
-        EPS_SCF:       1.0E-5
-        MAX_ITER_LUMO: 10000
-        OUTER_SCF:
-          MAX_SCF:   10
-          EPS_SCF:   1.0E-5
-        PRINT:
-          RESTART:
-            BACKUP_COPIES: 0
-            EACH:
-              QS_SCF: 25        
-      POISSON:
-        PERIODIC: XYZ
-      XC:
-        XC_FUNCTIONAL:
-          PBE:
-            PARAMETRIZATION: ORIG
-  MOTION:
-    PRINT:
-      TRAJECTORY:
-        _: 'OFF'      
-      RESTART:
-        BACKUP_COPIES: 0
-      RESTART_HISTORY:
-        _: 'OFF'
-      CELL:
-        _: 'OFF'
-      VELOCITIES:
-        _: 'OFF'
-      FORCES:
-        _: 'OFF'
-      STRESS:
-        _: 'OFF'
-    GEO_OPT:
-      TYPE: MINIMIZATION
-      OPTIMIZER: CG
-      MAX_ITER:  200                 
-      MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
-      RMS_FORCE: 0.01
-      MAX_DR: 0.4
-      RMS_DR: 0.2
-
-opt1vc:
-  kpoints_distance: 0.8
+  kpoints_distance: 10
   basis_pseudo: dzvp-pbe-gth.yml
   GLOBAL:
     PREFERRED_DIAG_LIBRARY: ScaLAPACK
@@ -105,6 +36,89 @@ opt1vc:
             BACKUP_COPIES: 0
             EACH:
               QS_SCF: 25
+        OT:
+          ALGORITHM: STRICT
+          MINIMIZER: DIIS
+          PRECONDITIONER: FULL_KINETIC
+          ENERGY_GAP: 0.0001
+          STEPSIZE: 0.125
+          LINESEARCH: 3PNT
+      POISSON:
+        PERIODIC: XYZ
+      XC:
+        XC_FUNCTIONAL:
+          PBE:
+            PARAMETRIZATION: ORIG
+  MOTION:
+    PRINT:
+      TRAJECTORY:
+        _: 'OFF'      
+      RESTART:
+        BACKUP_COPIES: 0
+      RESTART_HISTORY:
+        _: 'OFF'
+      CELL:
+        _: 'OFF'
+      VELOCITIES:
+        _: 'OFF'
+      FORCES:
+        _: 'OFF'
+      STRESS:
+        _: 'OFF'
+    GEO_OPT:
+      TYPE: MINIMIZATION
+      OPTIMIZER: CG
+      MAX_ITER:  200                 
+      MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
+      RMS_FORCE: 0.01
+      MAX_DR: 0.4
+      RMS_DR: 0.4
+
+opt1vc:
+  kpoints_distance: 10
+  basis_pseudo: dzvp-pbe-gth.yml
+  GLOBAL:
+    PREFERRED_DIAG_LIBRARY: ScaLAPACK
+    PRINT_LEVEL: MEDIUM
+  FORCE_EVAL:
+    METHOD: QUICKSTEP
+    STRESS_TENSOR: ANALYTICAL
+    DFT:
+      BASIS_SET_FILE_NAME:
+        - GTH_BASIS_SETS
+        - BASIS_MOLOPT
+        - BASIS_MOLOPT_UCL
+      POTENTIAL_FILE_NAME:
+        - GTH_POTENTIALS
+      UKS:          False
+      CHARGE:       0
+      MGRID:
+        CUTOFF:      400
+        REL_CUTOFF:  40
+        NGRIDS:      4
+      QS:
+        METHOD: GPW
+        EPS_DEFAULT:   1.0E-10
+        EXTRAPOLATION: ASPC
+      SCF:
+        MAX_SCF: 50
+        EPS_SCF:       1.0E-5
+        MAX_ITER_LUMO: 10000
+        OUTER_SCF:
+          MAX_SCF:   10
+          EPS_SCF:   1.0E-5
+        PRINT:
+          RESTART:
+            BACKUP_COPIES: 0
+            EACH:
+              QS_SCF: 25
+        OT:
+          ALGORITHM: STRICT
+          MINIMIZER: DIIS
+          PRECONDITIONER: FULL_KINETIC
+          ENERGY_GAP: 0.0001
+          STEPSIZE: 0.125
+          LINESEARCH: 3PNT
       POISSON:
         PERIODIC: XYZ
         POISSON_SOLVER: PERIODIC
@@ -135,12 +149,12 @@ opt1vc:
       OPTIMIZER: CG
       MAX_ITER:  200
       MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
-      RMS_FORCE: 0.005 
+      RMS_FORCE: 0.01
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
 
 opt2:
-  kpoints_distance: 0.4
+  kpoints_distance: 10
   basis_pseudo: dzvp-pbe-gth.yml
   GLOBAL:
     PREFERRED_DIAG_LIBRARY: ScaLAPACK
@@ -177,6 +191,13 @@ opt2:
             BACKUP_COPIES: 0
             EACH:
               QS_SCF: 25
+        OT:
+          ALGORITHM: STRICT
+          MINIMIZER: DIIS
+          PRECONDITIONER: FULL_KINETIC
+          ENERGY_GAP: 0.0001
+          STEPSIZE: 0.125
+          LINESEARCH: 3PNT
       POISSON:
         PERIODIC: XYZ
         POISSON_SOLVER: PERIODIC
@@ -207,10 +228,10 @@ opt2:
       MAX_FORCE: "[bohr^-1*hartree] 0.0058"  # 0.3 eV/A
       RMS_FORCE: 0.005
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
 
 scaled_bulk:
-  kpoints_distance: 0.4
+  kpoints_distance: 10
   basis_pseudo: dzvp-pbe-gth.yml
   GLOBAL:
     PREFERRED_DIAG_LIBRARY: ScaLAPACK
@@ -247,6 +268,13 @@ scaled_bulk:
             BACKUP_COPIES: 0
             EACH:
               QS_SCF: 25
+        OT:
+          ALGORITHM: STRICT
+          MINIMIZER: DIIS
+          PRECONDITIONER: FULL_KINETIC
+          ENERGY_GAP: 0.0001
+          STEPSIZE: 0.125
+          LINESEARCH: 3PNT
       POISSON:
         PERIODIC: XYZ
         POISSON_SOLVER: PERIODIC
@@ -277,10 +305,10 @@ scaled_bulk:
       MAX_FORCE: "[bohr^-1*hartree] 0.0097"  # 0.5 eV/A
       RMS_FORCE: 0.009
       MAX_DR: 0.4
-      RMS_DR: 0.2
+      RMS_DR: 0.4
 
 bulk:
-  kpoints_distance: 0.4
+  kpoints_distance: 10
   basis_pseudo: dzvp-pbe-gth.yml
   GLOBAL:
     PREFERRED_DIAG_LIBRARY: ScaLAPACK
@@ -322,6 +350,13 @@ bulk:
             BACKUP_COPIES: 0
             EACH:
               QS_SCF: 25
+        OT:
+          ALGORITHM: STRICT
+          MINIMIZER: DIIS
+          PRECONDITIONER: FULL_KINETIC
+          ENERGY_GAP: 0.0001
+          STEPSIZE: 0.125
+          LINESEARCH: 3PNT
       POISSON:
         PERIODIC: XYZ
         POISSON_SOLVER: PERIODIC
@@ -352,6 +387,6 @@ bulk:
       OPTIMIZER: CG
       MAX_ITER:  200
       MAX_FORCE: "[bohr^-1*hartree] 0.00058" # 0.03 eV/A
-      RMS_FORCE: 0.0009
+      RMS_FORCE: 0.0005
       MAX_DR: 0.0030
-      RMS_DR: 0.0015
+      RMS_DR: 0.0030

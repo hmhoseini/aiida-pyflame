@@ -46,17 +46,16 @@ def read_structures():
                 known_bulk_structures[len(pymatgen_structure.sites)].append(pymatgen_structure)
     # read generated random structures
     random_bulk_structures_dict = defaultdict(list)
-    if inputs['random_structure_generation'] != 0:
-        log_write('Reading random bulk structures'+'\n')
-        if os.path.exists(os.path.join(output_dir,'random_bulk_structures.json')):
-            with open(os.path.join(output_dir,'random_bulk_structures.json'), 'r', encoding='utf-8') as fhandle:
-                tmp_dict = json.loads(fhandle.read())
-            for keys in tmp_dict.keys():
-                if int(keys) in allowed_n_atom_bulk+allowed_n_atom_reference:
-                    random_bulk_structures_dict[int(keys)].extend(tmp_dict[keys])
-        else:
-            log_write('>>> ERROR: no random bulk structure was found <<<'+'\n')
-            sys.exit()
+    log_write('Reading random bulk structures'+'\n')
+    if os.path.exists(os.path.join(output_dir,'random_bulk_structures.json')):
+        with open(os.path.join(output_dir,'random_bulk_structures.json'), 'r', encoding='utf-8') as fhandle:
+            tmp_dict = json.loads(fhandle.read())
+        for keys in tmp_dict.keys():
+            if int(keys) in allowed_n_atom_bulk+allowed_n_atom_reference:
+                random_bulk_structures_dict[int(keys)].extend(tmp_dict[keys])
+    else:
+        log_write('>>> ERROR: no random bulk structure was found <<<'+'\n')
+        sys.exit()
     return n_struct_geopt_reference, n_struct_geopt, known_bulk_structures, random_bulk_structures_dict
 
 def add_structures_to_parent_group():
@@ -176,8 +175,8 @@ def store_step3_results():
     seeds_bulk = []
     seeds_cluster = []
     for a_node in results_step3_group.nodes:
-#        if not a_node.is_finished_ok:
-#            continue
+        if not a_node.is_finished_ok:
+            continue
         if 'VASP' in inputs['ab_initio_code']:
             if not a_node.outputs.misc.dict.run_status['electronic_converged']:
                 continue
