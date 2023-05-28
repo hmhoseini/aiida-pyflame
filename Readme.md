@@ -17,14 +17,15 @@ The latest version of [FLAME](https://gitlab.com/flame-code/FLAME) compatible wi
 
 To install the AiiDA-PyFLAME package directly from the cloned repository:
 
-    $ git clone https://github.com/hmhoseini/aiida-pyflame.git
+```
+git clone https://github.com/hmhoseini/aiida-pyflame.git
+   
+cd aiida-pyflame
     
-    $ cd aiida-pyflame
-    
-    $ pip install .
+pip install -e .
+```
 
-
-The AiiDA-PyFLAME directory should be set in PATH and PYTHONPATH.
+The AiiDA-PyFLAME directory should be added to PYTHONPATH.
 
 ## Usage ##
 
@@ -57,7 +58,6 @@ The following values should be specified in the **config.py** file:
 |Values                |Description|
 |-|-|
 |api_key|[The Materials Project API](https://materialsproject.org/api)|
-|||
 |DFT_code_string|Code label for DFT calculations. Available codes and their identifiers can be listed with *verdi code list*|
 |FLAME_code_string |Code label for FLAME calculations. Available codes and their identifiers can be listed with *verdi code list*|
 |VASP_potential_family|Potential family for VASP calculation. Available families of VASP potcar files can be listed with *verdi data vasp-potcar listfamilies*|
@@ -76,41 +76,32 @@ The data that should be provided in **input.yaml** is as follows:
 |Key|Description|
 |-|-|
 |chemical_formula|A list of chemical formula(s)|
-|||
 |bulk_number_of_atoms|Specifies number of atoms in bulk structures|
 |max_number_of_bulk_structures|Specifies number of structures sent for ab-initio calculations|
-|||
 |reference_number_of_atoms|Specifies number of atoms in reference structures. Should be a subset of bulk_number_of_atoms. The structures are optimized with tight criteria and if large number of atoms is give, then it could be time consuming.|
 |max_number_of_reference_structures|Specifies number of reference structures|
-|||
 |cluster_calculation|If cluster structures should be included in the training|
 |cluster_number_of_atoms|Number of atoms on cluster structures. Should be a subset of bulk_number_of_atoms|
 |box_size|Size of the box for clusters in Angstrom|
 |vacuum_length|Minimum length of vacuum for each supercell containing a cluster|
-|||
 |min_distance_prefactor|The allowed distance between atoms is calculated as the sum of their covalent radii. The allowed distance can be tuned by this prefactor.|
 |descending_prefactor|Either False or a number to specify the percentage of descending min_distance_prefactor in each cycle of training|
 |energy_window|The maximum value of energy for training data.|
-|||
 |method|behler|
 |number_of_nodes|Number of nodes in the hidden layer of the NN for each cycle of training.|
 |number_of_epoch|Number of epoch for each cycle of training.|
-|||
 |minimahopping_time|Minimum and maximum time for minima hopping jobs (in hours)|
 |minhocao_steps|Maximum number of minhocao steps|
-|bulk_minhocao|Maximum number of minhocao jobs|
+|bulk_minhocao|Maximum number of minhocao jobs (minima hopping for bulk structures with variable cell)|
 |minhopp_steps|Maximum number of minhopp steps|
-|bulk_minhopp|Maximum number of minhopp jobs for bulk structures|
+|bulk_minhopp|Maximum number of minhopp jobs for bulk structures (minima hopping for bulk structures with fixed cell)|
 |cluster_minhopp|Maximum number of minhopp jobs for clusters|
-|||
 |dtol_prefactor|Prefactor for structure diversity check. The larger the value is, the more structures are considered similar (removed from the list).|
 |prefactor_cluster|A prefactor for dtol_prefactor to be employed for clusters|
-|||
 |ab_initio_code|CP2K_GTH or SIRIUS_CP2K or VASP|
-|||
-|user_specified_CP2K_files|If True, then codes/cp2k/cp2k_files folder should be copied into the run directory. The user can modify CP2L keywords (protocol files).|
+|user_specified_CP2K_files|If True, then codes/cp2k/cp2k_files folder should be copied into the run directory. The user can modify CP2K keywords (protocol files and/or pseudopotentials).|
 |user_specified_FLAME_file|If True, then codes/flame/flame_files folder should be copied into the run directory. The user can modify FLAME keywords (protocol file).|
-|user_specified_VASP_file |If True, then codes/vasp/vasp_files folder should be copied into the run directory. The user can modify VASP keywords (protocol file).|
+|user_specified_VASP_file |If True, then codes/vasp/vasp_files folder should be copied into the run directory. The user can modify VASP keywords (protocol file and/or potential_mapping).|
 
 <br>
 The step from which AiiDA-PyFLAME (re)starts is specified in restart.yaml. AiiDA-PyFLAME keeps track of its steps. A detailed log file (**pyflame.log**) will be written in the output directory. If a failure occurs and AiiDA-PyFLAME cannot advance, the user can restart AiiDA-PyFLAME from the last successfully accomplished step. It is noted that the user can always restart AiiDA-PyFLAME from a previous step.
@@ -119,9 +110,9 @@ The following parameters can be specified in **restart.yaml**:
 
 |Key                |Description|
 |-|-|
-|re-start_from_step |Specifies the step the script will (re)start.<br>-1: run unfinished jobs <br>1: initistart AiiDA-PyFLAME <br>2: random bulk structure generation <br>3: initial ab-initio calculations <br>4: FLAME trainin loop|
+|re-start_from_step |Specifies the step the script will (re)start.<br>-1: run unfinished jobs <br>1: start AiiDA-PyFLAME <br>2: random bulk structure generation <br>3: initial ab-initio calculations <br>4: FLAME trainin loop|
 |stop_after_step|The script stops after the end of this step. -1 for non-stop run.|
-|training_loop_start|Specifies the cycle number and cycle name for the training cycle. <br> The cycle names are as follows:<br>train, minimahopping, divcheck, SP_calculations|
+|training_loop_start|Specifies the cycle number and cycle name for the training cycle. The cycle names are as follows:<br>- train (training the NN) <br>- minimahopping (minima hopping for bulk structures and clusters)<br>- divcheck (structure diversity check) <br>- SP_calculations (ab-initio single-point calculations)|
 |training_loop_stop|Specifies the cycle number and cycle name to stop the training cycle.|
 
 When the above-mentioned files are ready, the script can be executed by running **pyflame.py** command.

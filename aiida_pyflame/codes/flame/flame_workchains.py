@@ -311,7 +311,7 @@ class FLAMEMinhocaoWorkChain(WorkChain):
         builder.metadata.options.resources = {
                 'num_machines': settings.job_script['minimahopping']['nodes'],
                 'num_mpiprocs_per_machine': settings.job_script['minimahopping']['ntasks']}
-        builder.metadata.options.max_wallclock_seconds = (int(parameters['main']['time_limit'])+1) * 3600
+        builder.metadata.options.max_wallclock_seconds = (parameters['main']['time_limit'] + 1) * 3600
         return builder
 
     @staticmethod
@@ -348,7 +348,7 @@ class FLAMEMinhocaoWorkChain(WorkChain):
             minhocao_time = max_t
         else:
             minhocao_time = min_t + (max_t - min_t)/(max_n - min_n) * (len(pymatgen_structure.sites) - min_n)
-        additional_parameters['main']['time_limit'] = minhocao_time
+        additional_parameters['main']['time_limit'] = minhocao_time - 1
         additional_parameters['minhopp'] = {}
         additional_parameters['minhopp']['nstep'] = settings.inputs['minhocao_steps'][c_no-1]
         return additional_parameters
@@ -423,7 +423,7 @@ class FLAMEMinhoppWorkChain(WorkChain):
         builder.metadata.options.resources = {
                 'num_machines': settings.job_script['minimahopping']['nodes'],
                 'num_mpiprocs_per_machine': settings.job_script['minimahopping']['ntasks']}
-        builder.metadata.options.max_wallclock_seconds = (int(parameters['main']['time_limit'])+1) * 3600
+        builder.metadata.options.max_wallclock_seconds = (parameters['main']['time_limit'] + 1) * 3600
         return builder
 
     @staticmethod
@@ -443,7 +443,7 @@ class FLAMEMinhoppWorkChain(WorkChain):
             minhocao_time = max_t
         else:
            minhocao_time = min_t + (max_t - min_t)/(max_n - min_n) * (len(pymatgen_structure.sites) - min_n)
-        additional_parameters['main']['time_limit'] = minhocao_time
+        additional_parameters['main']['time_limit'] = minhocao_time - 1
         additional_parameters['minhopp'] = {}
         additional_parameters['minhopp']['nstep'] = settings.inputs['minhopp_steps'][c_no-1]
         return additional_parameters
