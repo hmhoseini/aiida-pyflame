@@ -12,7 +12,7 @@ def parse_cp2k_output_simple(fstring):
     result_dict = {"SIRIUS": SIRIUS}
     energy = None
     bohr2ang = 0.529177208590000
-    Eh2eV = 0.0367492929
+    Eh2eV = 27.211324570273
 
     for i_line, line in enumerate(lines):
         if line.startswith(" GLOBAL| Run type"):
@@ -75,7 +75,7 @@ def parse_cp2k_output_simple(fstring):
                     result_dict["motion_opt_converged"] = True
 
             if print_now and energy is not None:
-                if step == 0: #BFGS
+                if step == 0 and result_dict["run_type"] in ["GEO_OPT", "CELL_OPT"]: #BFGS or CS
                     continue
                 result_dict["motion_step_info"]["step"].append(step)
                 result_dict["motion_step_info"]["energy_eV"].append(energy*Eh2eV)

@@ -67,7 +67,7 @@ opt1:
         _: 'OFF'
     GEO_OPT:
       TYPE: MINIMIZATION
-      OPTIMIZER: CG
+      OPTIMIZER: LBFGS
       MAX_ITER:  200                 
       MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
       RMS_FORCE: 0.01
@@ -146,7 +146,7 @@ opt1vc:
       TYPE: DIRECT_CELL_OPT
       EXTERNAL_PRESSURE:  "[bar] 0.0"
       PRESSURE_TOLERANCE: 200
-      OPTIMIZER: CG
+      OPTIMIZER: LBFGS
       MAX_ITER:  200
       MAX_FORCE: "[bohr^-1*hartree] 0.0136" # 0.7 eV/A
       RMS_FORCE: 0.01
@@ -223,7 +223,7 @@ opt2:
         _: 'ON'
     GEO_OPT:
       TYPE: MINIMIZATION
-      OPTIMIZER: CG
+      OPTIMIZER: LBFGS
       MAX_ITER:  200                 
       MAX_FORCE: "[bohr^-1*hartree] 0.0058"  # 0.3 eV/A
       RMS_FORCE: 0.005
@@ -300,7 +300,7 @@ scaled_bulk:
         _: 'ON'
     GEO_OPT:
       TYPE: MINIMIZATION
-      OPTIMIZER: CG
+      OPTIMIZER: LBFGS
       MAX_ITER:  200                 
       MAX_FORCE: "[bohr^-1*hartree] 0.0097"  # 0.5 eV/A
       RMS_FORCE: 0.009
@@ -384,7 +384,7 @@ bulk:
       TYPE: DIRECT_CELL_OPT
       EXTERNAL_PRESSURE:  "[bar] 0.0"
       PRESSURE_TOLERANCE: 100
-      OPTIMIZER: CG
+      OPTIMIZER: LBFGS
       MAX_ITER:  200
       MAX_FORCE: "[bohr^-1*hartree] 0.00058" # 0.03 eV/A
       RMS_FORCE: 0.0005
