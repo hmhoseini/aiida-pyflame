@@ -18,61 +18,35 @@ def get_pertured_failed_structures(cycle_number):
     fpath = os.path.join(Flame_dir,cycle_number,'minimahopping','failed_structures.json')
     if os.path.exists(fpath):
         with open(fpath, 'r', encoding='utf-8') as fhandle:
-            f_s = json.loads(fhandle.read())
-        failed_b_structures.extend(f_s)
+            failed_b_structures.extend(json.loads(fhandle.read()))
+
     fpath = os.path.join(Flame_dir,cycle_number,'minimahopping','failed_bulk.json')
     if os.path.exists(fpath):
         with open(fpath, 'r', encoding='utf-8') as fhandle:
-            f_s = json.loads(fhandle.read())
-        failed_b_structures.extend(f_s)
+            failed_b_structures.extend(json.loads(fhandle.read()))
+
     fpath = os.path.join(Flame_dir,cycle_number,'minimahopping','failed_cluster.json')
     if os.path.exists(fpath):
         with open(fpath, 'r', encoding='utf-8') as fhandle:
-            f_s = json.loads(fhandle.read())
-        failed_c_structures.extend(f_s)
+            failed_c_structures.extend(json.loads(fhandle.read()))
 
     perturbed_b_structures = []
     perturbed_c_structures = []
 
     for a_b_struct in failed_b_structures:
         a_b_structure = Structure.from_dict(a_b_struct)
-        perturbed_b_structures.append(a_b_structure)
         for p in (0.02, 0.05):
             a_b_s = a_b_structure.copy()
             a_b_s.perturb(p)
             if is_structure_valid(a_b_s, min_d_prefactor, False, False):
                 perturbed_b_structures.append(a_b_s)
-        for s in (0.95, 1.05):
-            a_b_s = a_b_structure.copy()
-            a_b_s.scale_lattice(a_b_s.volume*s)
-            if is_structure_valid(a_b_s, min_d_prefactor, False, False):
-                perturbed_b_structures.append(a_b_s)
-
     for a_c_struct in failed_c_structures:
-        spcs = Structure.from_dict(a_c_struct).species
-        cart_coords = Structure.from_dict(a_c_struct).cart_coords
-        maxx = max(cart_coords[:,0:1])[0]
-        minx = min(cart_coords[:,0:1])[0]
-        maxy = max(cart_coords[:,1:2])[0]
-        miny = min(cart_coords[:,1:2])[0]
-        maxz = max(cart_coords[:,2:3])[0]
-        minz = min(cart_coords[:,2:3])[0]
-        a_cluster = maxx-minx+inputs['vacuum_length']
-        b_cluster = maxy-miny+inputs['vacuum_length']
-        c_cluster = maxz-minz+inputs['vacuum_length']
-        if max(a_cluster, b_cluster, c_cluster) > inputs['box_size']:
-            continue
-        molecule = Molecule(spcs, cart_coords)
-        try:
-            boxed_molecule = molecule.get_boxed_structure(a_cluster,b_cluster,c_cluster)
-        except:
-            continue
-        perturbed_c_structures.append(boxed_molecule)
+        a_c_structure = Molecule.from_dict(a_c_struct)
         for p in (0.02, 0.05):
-            a_c_structure = boxed_molecule.copy()
-            a_c_structure.perturb(p)
-            if is_structure_valid(a_c_structure, min_d_prefactor, False, False):
-                perturbed_c_structures.append(a_c_structure)
+            a_c_s = a_c_structure.copy()
+            a_c_s.perturb(p)
+            if is_structure_valid(a_c_s, min_d_prefactor, False, False):
+                perturbed_c_structures.append(a_c_s)
     return perturbed_b_structures, perturbed_c_structures
 
 def get_element_list():
@@ -87,18 +61,18 @@ def get_element_list():
     return element_list
 
 def get_known_structures(composition_list):
-    mpr= MPRester(configs['api_key'])
     known_structures = []
     primitive_known_structures = []
     vpas = []
+    mpr= MPRester(configs['api_key'])
     for a_composition in composition_list:
         docs = mpr.materials.search(formula=a_composition, fields=["structure"])
         known_structures.extend(docs)
     for a_k_s in known_structures:
-        p_a_k_s = a_k_s.structure.get_primitive_structure()
-        vpas.append(p_a_k_s.volume/len(p_a_k_s.sites))
-        if len(p_a_k_s.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
-            primitive_known_structures.append(p_a_k_s.as_dict())
+        a_k_s_primitive = a_k_s.structure.get_primitive_structure()
+        vpas.append(a_k_s_primitive.volume/len(a_k_s_primitive.sites))
+        if len(a_k_s_primitive.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
+            primitive_known_structures.append(a_k_s_primitive.as_dict())
     if len(vpas) < 2:
         covalent_radius = CovalentRadius.radius
         minmaxvpa = []
@@ -108,12 +82,12 @@ def get_known_structures(composition_list):
             elements.append(str(elmnt))
             nelement.append(int(nelmnt))
         if len(vpas) == 1:
-            minmaxvpa.append(vpas[0]*0.8)
+            minmaxvpa.append(0.8 * vpas[0])
         else:
             vol = 0
             for i in range(len(elements)):
                 vol += 8 * covalent_radius[elements[i]]**3 * nelement[i]
-            minmaxvpa.append(vol/sum(nelement))
+            minmaxvpa.append(0.8 * vol/sum(nelement))
         pre_fac = 2 if vpas[0] < 10 else 1.5
         minmaxvpa.append((minmaxvpa[0]/0.8) * pre_fac)
     else:

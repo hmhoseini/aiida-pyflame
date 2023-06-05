@@ -101,8 +101,6 @@ def collect_minhopp_results(cycle_number):
     min_d_prefactor = inputs['min_distance_prefactor'] * ((100-float(inputs['descending_prefactor']))/100)**(c_no)\
                       if inputs['descending_prefactor']\
                       else inputs['min_distance_prefactor']
-    with open(os.path.join(output_dir,'min_epa.dat'), 'r', encoding='utf8') as fhandle:
-        min_epa = float(fhandle.readline().strip())
 
     wf_minhopp_b_group = Group.get(label='wf_minimahopping')
     for a_wf_node in wf_minhopp_b_group.nodes:
@@ -118,18 +116,13 @@ def collect_minhopp_results(cycle_number):
                         if 'cluster' in a_node.label:
                             plot_nat_c.append(nat)
                             plot_epa_c.append(epa)
+                            poslows_cluster[nat].append(structure.as_dict())
                         if 'bulk' in a_node.label:
                             volume = structure.volume
                             vpa = volume/nat
                             plot_nat_b.append(nat)
                             plot_epa_b.append(epa)
                             plot_vpa_b.append(vpa)
-                        if epa < min_epa:
-                            failed_bulk.append(structure.as_dict())
-                            continue
-                        if 'cluster' in a_node.label:
-                            poslows_cluster[nat].append(structure.as_dict())
-                        if 'bulk' in a_node.label:
                             poslows_bulk[nat].append(structure.as_dict())
                 for a_conf in a_node.outputs.output_parameters['trajs']:
                     epot = a_conf['conf']['epot']
@@ -137,9 +130,6 @@ def collect_minhopp_results(cycle_number):
                     epa = 27.2114 * epot/nat
                     structure = conf2pymatgenstructure([a_conf])[0]
                     if is_structure_valid(structure, min_d_prefactor, False, False):
-                        if epa < min_epa:
-                            failed_bulk.append(structure.as_dict())
-                            continue
                         if 'cluster' in a_node.label:
                             trajs_cluster[nat].append(structure.as_dict())
                         if 'bulk' in a_node.label:
@@ -210,8 +200,6 @@ def collect_minhocao_results(cycle_number):
     min_d_prefactor = inputs['min_distance_prefactor'] * ((100-float(inputs['descending_prefactor']))/100)**(c_no)\
                       if inputs['descending_prefactor']\
                       else inputs['min_distance_prefactor']
-    with open(os.path.join(output_dir,'min_epa.dat'), 'r', encoding='utf8') as fhandle:
-        min_epa = float(fhandle.readline().strip())
     with open(os.path.join(output_dir,'vpa.dat'), 'r', encoding='utf8') as fhandle:
         vpas = [float(line.strip()) for line in fhandle]
 
@@ -230,9 +218,6 @@ def collect_minhocao_results(cycle_number):
                         plot_nat.append(nat)
                         plot_epa.append(epa)
                         plot_vpa.append(vpa)
-                        if epa < min_epa:
-                            failed.append(structure.as_dict())
-                            continue
                         poslows[nat].append(structure.as_dict())
                 for a_conf in a_node.outputs.output_parameters['posmds']:
                     epot = a_conf['conf']['epot']
@@ -241,9 +226,6 @@ def collect_minhocao_results(cycle_number):
                     structure = conf2pymatgenstructure([a_conf])[0]
                     vpa = structure.volume/len(structure.sites)
                     if is_structure_valid(structure, min_d_prefactor, True, False) and vpa <= vpas[1]*2:
-                        if epa < min_epa:
-                            failed.append(structure.as_dict())
-                            continue
                         posmds[nat].append(structure.as_dict())
             else:
                 failed.append(a_node.inputs.job_type_info.dict.minhocao['structure'])

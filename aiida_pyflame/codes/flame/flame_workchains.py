@@ -311,7 +311,7 @@ class FLAMEMinhocaoWorkChain(WorkChain):
         builder.metadata.options.resources = {
                 'num_machines': settings.job_script['minimahopping']['nodes'],
                 'num_mpiprocs_per_machine': settings.job_script['minimahopping']['ntasks']}
-        builder.metadata.options.max_wallclock_seconds = (parameters['main']['time_limit'] + 1) * 3600
+        builder.metadata.options.max_wallclock_seconds = int((parameters['main']['time_limit'] + 1) * 3600)
         return builder
 
     @staticmethod
@@ -423,7 +423,7 @@ class FLAMEMinhoppWorkChain(WorkChain):
         builder.metadata.options.resources = {
                 'num_machines': settings.job_script['minimahopping']['nodes'],
                 'num_mpiprocs_per_machine': settings.job_script['minimahopping']['ntasks']}
-        builder.metadata.options.max_wallclock_seconds = (parameters['main']['time_limit'] + 1) * 3600
+        builder.metadata.options.max_wallclock_seconds = int((parameters['main']['time_limit'] + 1) * 3600)
         return builder
 
     @staticmethod

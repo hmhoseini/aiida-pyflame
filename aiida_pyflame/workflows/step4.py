@@ -258,6 +258,8 @@ def step_4():
             else:
                 nats['cluster'] = []
             nats['bulk'] = get_bulk_nats(cycle_number)
+            if len(nats['cluster']) == 0 and len(nats['bulk']) == 0:
+                log_write('nothing to do'+'\n')
             # submit jobs
             controller = DivCheckSubmissionController(
                 group_label='wf_divcheck',
