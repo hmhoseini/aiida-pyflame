@@ -3,10 +3,14 @@ from aiida.orm import Group
 from aiida_pyflame.workflows.settings import groups, log_file
 
 def log_write(txt):
+    """ Write to log file
+    """
     with open(log_file, 'a', encoding='utf8') as fhandle:
         fhandle.write(txt)
 
 def previous_run_exist_check():
+    """ Check if unfinished job exist
+    """
     active_groups = []
     for a_group_label in groups['workflows_group_list']:
         try:
@@ -21,8 +25,10 @@ def previous_run_exist_check():
         for a_a_g in active_groups:
             log_write('>>> ERROR: unfinished workflow(s) in group {} (pk: {}) <<<'.format(a_a_g.label, a_a_g.pk)+'\n')
         sys.exit()
-        
+
 def group_is_empty_check(group_label):
+    """ Check if a group is empty
+    """
     try:
         group = Group.get(label=group_label)
     except:

@@ -13,7 +13,7 @@ from aiida_pyflame.codes.utils import get_min_d, get_element_list, get_allowed_n
 import aiida_pyflame.workflows.settings as settings
 
 def dict_merge(dct, merge_dct):
-    """Taken from https://gist.github.com/angstwad/
+    """ Taken from https://gist.github.com/angstwad/
     """
     for k in merge_dct.keys():
         if (k in dct and isinstance(dct[k], dict) and isinstance(merge_dct[k], collections.abc.Mapping)):
@@ -442,7 +442,7 @@ class FLAMEMinhoppWorkChain(WorkChain):
         if max_n == min_n:
             minhocao_time = max_t
         else:
-           minhocao_time = min_t + (max_t - min_t)/(max_n - min_n) * (len(pymatgen_structure.sites) - min_n)
+            minhocao_time = min_t + (max_t - min_t)/(max_n - min_n) * (len(pymatgen_structure.sites) - min_n)
         additional_parameters['main']['time_limit'] = minhocao_time - 1
         additional_parameters['minhopp'] = {}
         additional_parameters['minhopp']['nstep'] = settings.inputs['minhopp_steps'][c_no-1]

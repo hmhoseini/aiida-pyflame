@@ -1,4 +1,6 @@
 Chemical_formula: [] # more than one formula (a list) can be provided
+from_db: [] # either False or a list of databases to retrieve atomic structures
+from_local_db: False # if True, atomic structures will be retrieved from run_dir/local_db/known_bulk_structures.json (a list of dict representation pymatgen Structures)
 
 # Number of atoms for bulk structures (list)
 bulk_number_of_atoms: []

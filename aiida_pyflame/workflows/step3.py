@@ -36,14 +36,15 @@ def read_structures():
         log_write('>>> WARNING: no reference structure for optimization <<<'+'\n')
     # read known structures, if any
     known_bulk_structures = defaultdict(list)
+    tmp_list = []
     if os.path.exists(os.path.join(output_dir,'known_bulk_structures.json')):
         log_write('Reading known bulk structures'+'\n')
         with open(os.path.join(output_dir,'known_bulk_structures.json'), 'r', encoding='utf-8') as fhandle:
-            tmp_dict = json.loads(fhandle.read())
-        for a_known_structure in tmp_dict:
-            pymatgen_structure = Structure.from_dict(a_known_structure)
-            if len(pymatgen_structure.sites) in allowed_n_atom_reference:
-                known_bulk_structures[len(pymatgen_structure.sites)].append(pymatgen_structure)
+            tmp_list.extend(json.loads(fhandle.read()))
+    for a_known_structure in tmp_list:
+        pymatgen_structure = Structure.from_dict(a_known_structure)
+        if len(pymatgen_structure.sites) in allowed_n_atom_reference:
+            known_bulk_structures[len(pymatgen_structure.sites)].append(pymatgen_structure)
     # read generated random structures
     random_bulk_structures_dict = defaultdict(list)
     log_write('Reading random bulk structures'+'\n')

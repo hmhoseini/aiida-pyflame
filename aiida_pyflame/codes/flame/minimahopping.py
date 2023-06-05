@@ -168,26 +168,27 @@ def plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa):
         min_epa = float(fhandle.readline().strip())
     with open(os.path.join(output_dir,'vpa.dat'), 'r', encoding='utf-8') as fhandle:
         vpas = [float(line.strip()) for line in fhandle]
+    if len(plot_nat) > 1:
 
-    plt.figure(1)
-    plt.scatter(plot_nat,plot_epa, label='epa-vs-nat')
-    plt.xlabel('nat')
-    plt.ylabel(r'epa $eV/atom')
-    plt.plot([min(plot_nat), max(plot_nat)], [min_epa, min_epa])
-    plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhocao_epa-vs-nat.png'))
-    plt.close()
+        plt.figure(1)
+        plt.scatter(plot_nat,plot_epa, label='epa-vs-nat')
+        plt.xlabel('nat')
+        plt.ylabel(r'epa $eV/atom')
+        plt.plot([min(plot_nat), max(plot_nat)], [min_epa, min_epa])
+        plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhocao_epa-vs-nat.png'))
+        plt.close()
 
-    plt.figure(2)
-    plt.scatter(plot_vpa,plot_epa, label='epa-vs-vpa')
-    plt.xlabel(r'vpa ${\AA}^3/atom$')
-    plt.ylabel(r'epa $eV/atom$')
-    plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='green')
-    plt.plot([min(vpas), min(vpas)], [min(plot_epa), max(plot_epa)], color='green')
-    plt.plot([max(vpas), max(vpas)], [min(plot_epa), max(plot_epa)], color='orange')
-    plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='orange')
-    plt.plot([min(plot_vpa), max(plot_vpa)], [min_epa, min_epa], color='navy')
-    plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhocao_epa-vs-vpa.png'))
-    plt.close()
+        plt.figure(2)
+        plt.scatter(plot_vpa,plot_epa, label='epa-vs-vpa')
+        plt.xlabel(r'vpa ${\AA}^3/atom$')
+        plt.ylabel(r'epa $eV/atom$')
+        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='green')
+        plt.plot([min(vpas), min(vpas)], [min(plot_epa), max(plot_epa)], color='green')
+        plt.plot([max(vpas), max(vpas)], [min(plot_epa), max(plot_epa)], color='orange')
+        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='orange')
+        plt.plot([min(plot_vpa), max(plot_vpa)], [min_epa, min_epa], color='navy')
+        plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhocao_epa-vs-vpa.png'))
+        plt.close()
 
 def collect_minhocao_results(cycle_number):
     failed = []

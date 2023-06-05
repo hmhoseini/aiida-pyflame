@@ -41,7 +41,7 @@ class CP2KSubmissionController(FromGroupSubmissionController):
         if 'cluster' in parent_node.label:
             process_class = ClusterGeOptWorkChain
         return inputs, process_class
-        
+
 class CP2KSPSubmissionController(FromGroupSubmissionController):
     """A SubmissionController
     """

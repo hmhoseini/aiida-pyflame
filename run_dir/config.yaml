@@ -1,5 +1,3 @@
-api_key:
-
 aiida_settings:
   DFT_code_string:
   FLAME_code_string:

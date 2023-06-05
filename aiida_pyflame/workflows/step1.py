@@ -28,14 +28,16 @@ def step_1():
         log_write('>>> ERROR: no composition is provided <<<'+'\n')
         sys.exit()
     # get_known_structures
-    primitive_known_structures, vpas = get_known_structures(composition_list)
-    if len(primitive_known_structures) > 0:
-        log_write('Number of known structures in the MPDB with given number of atoms:{}'.format(len(primitive_known_structures))+'\n')
+    known_structures, vpas = get_known_structures(composition_list)
+    if not inputs['from_db'] and not inputs['from_local_db']:
+        log_write('>>> WARNING: No database is specified <<<'+'\n')
+    elif len(known_structures) > 0:
+        log_write('Number of atomic structures with the given number of atoms in given databases:{}'.format(len(known_structures))+'\n')
     else:
-        log_write('>>> WARNING: No bulk structure with given number of atoms was found in the MPDB <<<'+'\n')
+        log_write('>>> WARNING: No bulk structure with given number of atoms was found in databases <<<'+'\n')
     # store
     with open(os.path.join(output_dir, 'known_bulk_structures.json'),'w', encoding='utf-8') as fhandle:
-        json.dump(primitive_known_structures, fhandle)
+        json.dump(known_structures, fhandle)
     with open(os.path.join(output_dir, 'vpa.dat'), 'w', encoding='utf-8') as fhandle:
         fhandle.writelines(['%s\n' % vpa  for vpa in vpas])
     log_write('STEP 1 ended'+'\n')

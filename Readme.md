@@ -5,7 +5,7 @@
 AiiDA-PyFLAME introduces an automated workflow for training neural network interatomic potentials (NNPs) with [FLAME](https://gitlab.com/flame-code/FLAME).
 
 ## Dependencies ##
-**Note:** Python 3.6 or later is required.
+Python 3.6 or later is required.
 
 The latest version of [FLAME](https://gitlab.com/flame-code/FLAME) compatible with Python 3 is required
 
@@ -57,7 +57,6 @@ The following values should be specified in the **config.py** file:
 
 |Values                |Description|
 |-|-|
-|api_key|[The Materials Project API](https://materialsproject.org/api)|
 |DFT_code_string|Code label for DFT calculations. Available codes and their identifiers can be listed with *verdi code list*|
 |FLAME_code_string |Code label for FLAME calculations. Available codes and their identifiers can be listed with *verdi code list*|
 |VASP_potential_family|Potential family for VASP calculation. Available families of VASP potcar files can be listed with *verdi data vasp-potcar listfamilies*|
@@ -76,6 +75,8 @@ The data that should be provided in **input.yaml** is as follows:
 |Key|Description|
 |-|-|
 |chemical_formula|A list of chemical formula(s)|
+|from_db|Either False or a list of databases to retrieve atomic structures. List of known [OPTIMADE](https://www.optimade.org/) providers: *aflow, cod, mcloud.mc3d, mcloud.mc2d, mcloud.2dtopo, mcloud.tc-applicability, mcloud.pyrene-mofs, mcloud.curated-cofs, mcloud.stoceriaitf, mcloud.scdm, mcloud.tin-antimony-sulfoiodide, mcloud.optimade-sample, mp, mpds, nmd, odbx, odbx.odbx_misc, omdb.omdb_production, oqmd, jarvis, tcod, twodmatpedia*.|
+|from_local_db|If True, atomic structures will be retrieved from *run_dir/local_db/known_bulk_structures.json* (a list of dict representation pymatgen Structures)|
 |bulk_number_of_atoms|Specifies number of atoms in bulk structures|
 |max_number_of_bulk_structures|Specifies number of structures sent for ab-initio calculations|
 |reference_number_of_atoms|Specifies number of atoms in reference structures. Should be a subset of bulk_number_of_atoms. The structures are optimized with tight criteria and if large number of atoms is give, then it could be time consuming.|
@@ -104,7 +105,7 @@ The data that should be provided in **input.yaml** is as follows:
 |user_specified_VASP_file |If True, then codes/vasp/vasp_files folder should be copied into the run directory. The user can modify VASP keywords (protocol file and/or potential_mapping).|
 
 <br>
-The step from which AiiDA-PyFLAME (re)starts is specified in restart.yaml. AiiDA-PyFLAME keeps track of its steps. A detailed log file (**pyflame.log**) will be written in the output directory. If a failure occurs and AiiDA-PyFLAME cannot advance, the user can restart AiiDA-PyFLAME from the last successfully accomplished step. It is noted that the user can always restart AiiDA-PyFLAME from a previous step.
+The step from which AiiDA-PyFLAME (re)starts is specified in restart.yaml. AiiDA-PyFLAME keeps track of its steps. If a failure occurs and AiiDA-PyFLAME cannot advance, the user can restart AiiDA-PyFLAME from the last successfully accomplished step. It is noted that users can always restart AiiDA-PyFLAME from a previous step.
 
 The following parameters can be specified in **restart.yaml**:
 

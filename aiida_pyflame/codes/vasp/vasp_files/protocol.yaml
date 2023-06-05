@@ -16,7 +16,7 @@ opt1:
     LMAXMIX: 2
     LREAL: Auto
     LWAVE: False
-    NCORE: 8
+    NCORE: 4
     NELM: 200
     NELMIN: 6
     NSW: 200
@@ -42,7 +42,7 @@ opt1vc:
     LMAXMIX: 2
     LREAL: Auto
     LWAVE: False
-    NCORE: 8
+    NCORE: 4
     NELM: 200
     NELMIN: 6
     NSW: 200
@@ -68,7 +68,7 @@ opt2:
     LMAXMIX: 2
     LREAL: Auto
     LWAVE: False
-    NCORE: 8
+    NCORE: 4
     NELM: 200
     NELMIN: 6
     NSW: 200
@@ -94,7 +94,7 @@ bulk:
     LMAXMIX: 2
     LREAL: Auto
     LWAVE: False
-    NCORE: 8
+    NCORE: 4
     NELM: 200
     NELMIN: 6
     NSW: 200
@@ -120,7 +120,7 @@ single_point:
     LMAXMIX: 2
     LREAL: Auto
     LWAVE: False
-    NCORE: 8
+    NCORE: 4
     NELM: 200
     NELMIN: 6
     NSW: 0

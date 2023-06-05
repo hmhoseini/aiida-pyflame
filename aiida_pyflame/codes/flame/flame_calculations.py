@@ -83,7 +83,7 @@ class FlameCalculation(CalcJob):
         calcinfo.codes_info = [codeinfo]
         if "file" in self.inputs:
             calcinfo.local_copy_list = []
-            for name, obj in self.inputs.file.items():
+            for _, obj in self.inputs.file.items():
                 if isinstance(obj, SinglefileData):
                     calcinfo.local_copy_list.append((obj.uuid, obj.filename, obj.filename))
         calcinfo.provenance_exclude_list = provenance_exclude_list

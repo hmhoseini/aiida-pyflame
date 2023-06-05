@@ -203,7 +203,7 @@ def collect_training_data(cycle_number):
             training_data.append(tmp_dict)
             tmp_dict = {}
 
-        if single_ionic_step: 
+        if single_ionic_step:
             continue
 
         maxmin_force = [[5.00,4.50],[4.50,4.00],[4.00,3.50],[3.50,3.00],\

@@ -1,13 +1,15 @@
 import os
 import json
-from pymatgen.core.structure import Structure, Molecule
+from pymatgen.core.structure import Structure
 from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 from pymatgen.analysis.molecule_structure_comparator import CovalentRadius
-from mp_api.client import MPRester
-from aiida_pyflame.workflows.settings import inputs, output_dir, configs, Flame_dir
+from pymatgen.ext.optimade import OptimadeRester
+from aiida_pyflame.workflows.settings import inputs, output_dir, run_dir, Flame_dir
 
 def get_pertured_failed_structures(cycle_number):
+    """ Perturb fialed crystal structures.
+    """
     c_no = int(cycle_number.split('-')[-1])
     min_d_prefactor = inputs['min_distance_prefactor'] * ((100-float(inputs['descending_prefactor']))/100)**(c_no-1)\
                       if inputs['descending_prefactor'] else inputs['min_distance_prefactor']
@@ -35,14 +37,14 @@ def get_pertured_failed_structures(cycle_number):
 
     for a_b_struct in failed_b_structures:
         a_b_structure = Structure.from_dict(a_b_struct)
-        for p in (0.02, 0.05):
+        for p in (0.03, 0.05):
             a_b_s = a_b_structure.copy()
             a_b_s.perturb(p)
             if is_structure_valid(a_b_s, min_d_prefactor, False, False):
                 perturbed_b_structures.append(a_b_s)
     for a_c_struct in failed_c_structures:
-        a_c_structure = Molecule.from_dict(a_c_struct)
-        for p in (0.02, 0.05):
+        a_c_structure = Structure.from_dict(a_c_struct)
+        for p in (0.03, 0.05):
             a_c_s = a_c_structure.copy()
             a_c_s.perturb(p)
             if is_structure_valid(a_c_s, min_d_prefactor, False, False):
@@ -50,6 +52,8 @@ def get_pertured_failed_structures(cycle_number):
     return perturbed_b_structures, perturbed_c_structures
 
 def get_element_list():
+    """ Retruns the list of elements.
+    """
     element_list = []
     composition_list = inputs['Chemical_formula']
     if len(composition_list) == 0:
@@ -61,40 +65,63 @@ def get_element_list():
     return element_list
 
 def get_known_structures(composition_list):
+    """ Retruns retrieved structures (and max/min of their volume/atom)
+        available in give databases
+    """
+    structures_provides = {}
     known_structures = []
-    primitive_known_structures = []
     vpas = []
-    mpr= MPRester(configs['api_key'])
-    for a_composition in composition_list:
-        docs = mpr.materials.search(formula=a_composition, fields=["structure"])
-        known_structures.extend(docs)
-    for a_k_s in known_structures:
-        a_k_s_primitive = a_k_s.structure.get_primitive_structure()
-        vpas.append(a_k_s_primitive.volume/len(a_k_s_primitive.sites))
-        if len(a_k_s_primitive.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
-            primitive_known_structures.append(a_k_s_primitive.as_dict())
+    if inputs['from_db']:
+        opt = OptimadeRester(inputs['from_db'], timeout=30)
+        for a_composition in composition_list:
+            optimade_filter = '(chemical_formula_reduced="{}")'.format(a_composition)
+            results = opt.get_structures_with_filter(optimade_filter)
+            structures_provides.update(results)
+    for structures_from_db in structures_provides.values():
+        for a_structure_from_db in structures_from_db.values():
+            vpas.append(a_structure_from_db.volume/len(a_structure_from_db.sites))
+            if len(a_structure_from_db.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
+                known_structures.append(a_structure_from_db.as_dict())
+            a_structure_from_db_primitive = a_structure_from_db.get_primitive_structure()
+            if len(a_structure_from_db_primitive.sites) != len(a_structure_from_db.sites) and\
+               len(a_structure_from_db_primitive.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
+                known_structures.append(a_structure_from_db_primitive.as_dict())
+    if inputs['from_local_db'] and os.path.exists(os.path.join(run_dir,'local_db','known_bulk_structures.json')):
+        with open(os.path.join(run_dir,'local_db','known_bulk_structures.json'), 'r', encoding='utf-8') as fhandle:
+            structures_from_local_db = json.loads(fhandle.read())
+        for a_s_f_l_db in structures_from_local_db:
+            a_structure_from_local_db = Structure.from_dict(a_s_f_l_db)
+            vpas.append(a_structure_from_local_db.volume/len(a_structure_from_local_db.sites))
+            if len(a_structure_from_local_db.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
+                known_structures.append(a_structure_from_local_db.as_dict())
+            a_structure_from_local_db_primitive = a_structure_from_local_db.get_primitive_structure()
+            if len(a_structure_from_local_db_primitive.sites) != len(a_structure_from_local_db.sites) and\
+               len(a_structure_from_local_db_primitive.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
+                known_structures.append(a_structure_from_local_db_primitive.as_dict())
     if len(vpas) < 2:
         covalent_radius = CovalentRadius.radius
-        minmaxvpa = []
-        elements = []
-        nelement = []
-        for elmnt, nelmnt in Composition(composition_list[0]).items():
-            elements.append(str(elmnt))
-            nelement.append(int(nelmnt))
-        if len(vpas) == 1:
-            minmaxvpa.append(0.8 * vpas[0])
-        else:
+        pre_fact = 1
+        for a_composition in composition_list:
+            elements = []
+            nelement = []
+            for elmnt, nelmnt in Composition(a_composition).items():
+                elements.append(str(elmnt))
+                nelement.append(int(nelmnt))
             vol = 0
             for i in range(len(elements)):
                 vol += 8 * covalent_radius[elements[i]]**3 * nelement[i]
-            minmaxvpa.append(0.8 * vol/sum(nelement))
-        pre_fac = 2 if vpas[0] < 10 else 1.5
-        minmaxvpa.append((minmaxvpa[0]/0.8) * pre_fac)
-    else:
-        minmaxvpa = [min(vpas), max(vpas)]
-    return primitive_known_structures, minmaxvpa
+                if elements[i] in ['H', 'N', 'O']:
+                    pre_fact = pre_fact + nelement[i] * 0.10
+            vpas.append(pre_fact * vol/sum(nelement))
+        if len(vpas) < 2:
+            vpas.append(vpas[0]*2)
+            vpas[0] = 0.8 * vpas[0]
+    minmaxvpa = [min(vpas), max(vpas)]
+    return known_structures, minmaxvpa
 
 def get_allowed_n_atom_for_compositions(composition_list):
+    """ Returns allowed number of atoms for given crystal structures.
+    """
     allowed_n_atom_bulk = []
     allowed_n_atom_reference = []
     for a_n_a in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
@@ -111,6 +138,9 @@ def get_allowed_n_atom_for_compositions(composition_list):
     return allowed_n_atom_bulk, allowed_n_atom_reference
 
 def is_structure_valid(structure, min_d_prefactor, check_angles, check_vpa):
+    """ Check if a crystal structure is a valid one.
+        criteria: minimum distance between atoms, angles, and vpa.
+    """
     if check_angles:
         angles = structure.lattice.angles
         if angles[0] > 135 or angles[0] < 45 or\
@@ -136,13 +166,15 @@ def is_structure_valid(structure, min_d_prefactor, check_angles, check_vpa):
     return True
 
 def get_min_d(elmnt1, elmnt2, X=False):
+    """ Returns allowed minimum distance between two elements.
+    """
     covalent_radius = CovalentRadius.radius
-    min_d = (covalent_radius[elmnt1] + covalent_radius[elmnt2])
+    min_d = covalent_radius[elmnt1] + covalent_radius[elmnt2]
     x_prefactor = 1
     if X:
         try:
             x_prefactor = 1 - (abs(Element(elmnt1).X - Element(elmnt2).X)/(3.98 - 0.79)) * 0.2
-        except:
+        except ValueError:
             pass
     return min_d * x_prefactor
 
