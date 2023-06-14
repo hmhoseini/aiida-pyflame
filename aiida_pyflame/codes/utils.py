@@ -98,7 +98,7 @@ def get_known_structures(composition_list):
             if len(a_structure_from_local_db_primitive.sites) != len(a_structure_from_local_db.sites) and\
                len(a_structure_from_local_db_primitive.sites) in inputs['bulk_number_of_atoms']+inputs['reference_number_of_atoms']:
                 known_structures.append(a_structure_from_local_db_primitive.as_dict())
-    if len(vpas) < 2:
+    if len(vpas) < 3:
         covalent_radius = CovalentRadius.radius
         pre_fact = 1
         for a_composition in composition_list:
@@ -113,9 +113,8 @@ def get_known_structures(composition_list):
                 if elements[i] in ['H', 'N', 'O']:
                     pre_fact = pre_fact + nelement[i] * 0.10
             vpas.append(pre_fact * vol/sum(nelement))
-        if len(vpas) < 2:
-            vpas.append(vpas[0]*2)
-            vpas[0] = 0.8 * vpas[0]
+        vpas.append(0.8 * min(vpas))
+        vpas.append(2.0 * min(vpas))
     minmaxvpa = [min(vpas), max(vpas)]
     return known_structures, minmaxvpa
 

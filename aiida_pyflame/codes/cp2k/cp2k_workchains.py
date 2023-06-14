@@ -512,6 +512,9 @@ class SinglePointtWorkChain(WorkChain):
             cls.initialize,
             cls.run_single_point,
             cls.inspect_calculation_1)
+        spec.exit_code(
+            300, 'ERROR_CALCULATION_FAILED',
+            message='The calculation did not finish successfully')
 
     def initialize(self):
         if 'GTH' in self.inputs.GTHorSIRIUS.value:

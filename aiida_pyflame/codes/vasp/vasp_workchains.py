@@ -2,7 +2,7 @@ import os
 import yaml
 from aiida.plugins import WorkflowFactory, DataFactory
 from aiida.engine import WorkChain
-from aiida.orm import Int, Str, Code, Dict, Bool, load_group
+from aiida.orm import Int, Str, Dict, Code, Bool, SinglefileData, load_group
 import aiida_pyflame.workflows.settings as settings
 
 results_step3_group = load_group(label='results_step3')
@@ -27,6 +27,10 @@ def construct_builder(structure, protocol, potential_mapping):
     builder.parameters = Dict(dict={'incar':protocol['incar']})
     builder.potential_family = Str(settings.configs['aiida_settings']['VASP_potential_family'])
     builder.potential_mapping = Dict(dict=potential_mapping['potential_mapping'])
+    if 'LUSE_VDW' in protocol['incar'].keys() and protocol['incar']['LUSE_VDW']:
+        with open(os.path.join(settings.VASP_input_files_path,'vdw_kernel.bindat'), 'rb') as handle:
+            vdw_kernel = SinglefileData(file=handle)
+        builder.file = {'vdw_kernel':vdw_kernel.bindat}
     KpointsData = DataFactory("array.kpoints")
     kpoints = KpointsData()
     kpoints.set_cell_from_structure(structure)
@@ -126,6 +130,9 @@ class Scheme1GeOptWorkChain(WorkChain):
             cls.inspect_calculation_3,
             cls.run_scaled_2,
             cls.inspect_calculation_4)
+        spec.exit_code(
+            300, 'ERROR_CALCULATION_FAILED',
+            message='The calculation did not finish successfully')
 
     def initialize(self):
         with open(os.path.join(settings.VASP_input_files_path,'protocol.yaml'), 'r', encoding='utf8') as fhandle:
@@ -214,6 +221,9 @@ class Scheme2GeOptWorkChain(WorkChain):
             cls.inspect_calculation_3,
             cls.run_scaled_2,
             cls.inspect_calculation_4)
+        spec.exit_code(
+            300, 'ERROR_CALCULATION_FAILED',
+            message='The calculation did not finish successfully')
 
     def initialize(self):
         with open(os.path.join(settings.VASP_input_files_path,'protocol.yaml'), 'r', encoding='utf8') as fhandle:
@@ -298,6 +308,9 @@ class ClusterGeOptWorkChain(WorkChain):
             cls.inspect_calculation_1,
             cls.run_opt2c,
             cls.inspect_calculation_2)
+        spec.exit_code(
+            300, 'ERROR_CALCULATION_FAILED',
+            message='The calculation did not finish successfully')
 
     def initialize(self):
         with open(os.path.join(settings.VASP_input_files_path,'protocol.yaml'), 'r', encoding='utf8') as fhandle:
@@ -348,6 +361,9 @@ class SinglePointtWorkChain(WorkChain):
             cls.initialize,
             cls.run_single_point,
             cls.inspect_calculation_1)
+        spec.exit_code(
+            300, 'ERROR_CALCULATION_FAILED',
+            message='The calculation did not finish successfully')
 
     def initialize(self):
         with open(os.path.join(settings.VASP_input_files_path,'protocol.yaml'), 'r', encoding='utf8') as fhandle:
