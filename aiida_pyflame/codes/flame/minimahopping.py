@@ -85,7 +85,6 @@ def plot_minhopp(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, p
         plt.close()
 
 def collect_minhopp_results(cycle_number):
-    failed_bulk = []
     poslows_bulk = defaultdict(list)
     trajs_bulk = defaultdict(list)
     failed_cluster = []
@@ -137,13 +136,11 @@ def collect_minhopp_results(cycle_number):
             else:
                 if 'cluster' in a_node.label:
                     failed_cluster.append(a_node.inputs.job_type_info.dict.minhopp['structure'])
-                if 'bulk' in a_node.label:
-                    failed_bulk.append(a_node.inputs.job_type_info.dict.minhopp['structure'])
     plot_minhopp(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c)
-    return poslows_bulk, trajs_bulk, failed_bulk, poslows_cluster, trajs_cluster, failed_cluster
+    return poslows_bulk, trajs_bulk, poslows_cluster, trajs_cluster, failed_cluster
 
 def store_minhopp_results(cycle_number):
-    poslows_bulk, trajs_bulk, failed_bulk, poslows_cluster, trajs_cluster, failed_cluster = collect_minhopp_results(cycle_number)
+    poslows_bulk, trajs_bulk, poslows_cluster, trajs_cluster, failed_cluster = collect_minhopp_results(cycle_number)
 
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','poslows-bulk-'+cycle_number+'.json'), 'w', encoding='utf8') as fhandle:
         json.dump(poslows_bulk, fhandle)
@@ -153,8 +150,6 @@ def store_minhopp_results(cycle_number):
         json.dump(trajs_bulk, fhandle)
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','trajectories-cluster-'+cycle_number+'.json'), 'w', encoding='utf8') as fhandle:
         json.dump(trajs_cluster, fhandle)
-    with open(os.path.join(Flame_dir,cycle_number,'minimahopping','failed_bulk.json'), 'w', encoding='utf8') as fhandle:
-        json.dump(failed_bulk, fhandle)
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','failed_cluster.json'), 'w', encoding='utf8') as fhandle:
         json.dump(failed_cluster, fhandle)
     keys = {}
@@ -191,7 +186,7 @@ def plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa):
         plt.close()
 
 def collect_minhocao_results(cycle_number):
-    failed = []
+    failed_bulk = []
     poslows = defaultdict(list)
     posmds = defaultdict(list)
     plot_nat = []
@@ -229,20 +224,20 @@ def collect_minhocao_results(cycle_number):
                     if is_structure_valid(structure, min_d_prefactor, True, False) and vpa <= vpas[1]*2:
                         posmds[nat].append(structure.as_dict())
             else:
-                failed.append(a_node.inputs.job_type_info.dict.minhocao['structure'])
+                failed_bulk.append(a_node.inputs.job_type_info.dict.minhocao['structure'])
     plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa)
-    return poslows, posmds, failed
+    return poslows, posmds, failed_bulk
 
 def store_minhocao_results(cycle_number):
-    poslows, posmds, failed = collect_minhocao_results(cycle_number)
+    poslows, posmds, failed_bulk = collect_minhocao_results(cycle_number)
 
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','poslows-'+cycle_number+'.json'), 'w', encoding='utf8') as fhandle:
         json.dump(poslows, fhandle)
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','posmds-'+cycle_number+'.json'), 'w', encoding='utf8') as fhandle:
         json.dump(posmds, fhandle)
 
-    with open(os.path.join(Flame_dir,cycle_number,'minimahopping','failed_structures.json'), 'w', encoding='utf8') as fhandle:
-        json.dump(failed, fhandle)
+    with open(os.path.join(Flame_dir,cycle_number,'minimahopping','failed_bulk.json'), 'w', encoding='utf8') as fhandle:
+        json.dump(failed_bulk, fhandle)
     keys = {}
     keys['bulk'] = [str(a_key) for a_key in poslows.keys()]
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','nats_minhocao.json'), 'w', encoding='utf8') as fhandle:

@@ -17,11 +17,6 @@ def get_pertured_failed_structures(cycle_number):
     failed_b_structures = []
     failed_c_structures = []
 
-    fpath = os.path.join(Flame_dir,cycle_number,'minimahopping','failed_structures.json')
-    if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8') as fhandle:
-            failed_b_structures.extend(json.loads(fhandle.read()))
-
     fpath = os.path.join(Flame_dir,cycle_number,'minimahopping','failed_bulk.json')
     if os.path.exists(fpath):
         with open(fpath, 'r', encoding='utf-8') as fhandle:
