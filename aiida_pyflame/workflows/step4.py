@@ -34,54 +34,49 @@ def collect_singlepoint_results():
         min_epa = float(fhandle.readline().strip())
     e_window = settings.inputs['energy_window']
     results_singlepoint_group = Group.get(label='results_singlepoint')
-    for a_node in results_singlepoint_group.nodes:
-        if 'VASP' in settings.inputs['ab_initio_code']:
-            if not a_node.outputs.misc.dict.run_status['electronic_converged']:
+    for a_wf_node in results_singlepoint_group.nodes:
+        for a_node in a_wf_node.called:
+            if not a_node.is_finished_ok:
                 continue
-            total_energy = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
-            pymatgen_structure = a_node.outputs.structure.get_pymatgen()
-            nat = len(pymatgen_structure.sites)
-            epa = total_energy/nat
-            if epa < min_epa + e_window:
+            if 'VASP' in settings.inputs['ab_initio_code']:
+                if not a_node.outputs.misc.dict.run_status['electronic_converged']:
+                    continue
+                total_energy = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
+                pymatgen_structure = a_node.outputs.structure.get_pymatgen()
+                nat = len(pymatgen_structure.sites)
+                epa = total_energy/nat
+                if epa > min_epa + e_window:
+                    continue
                 forces = a_node.outputs.trajectory.get_array('forces')[-1].tolist()
                 tot_forces = []
                 for a_f in range(len(forces)):
                     tot_forces.append(math.sqrt(forces[a_f][0]**2 + forces[a_f][1]**2 + forces[a_f][2]**2))
                 max_tot_foce = max(tot_forces)
-                if 'bulk' in a_node.label:
-                    if epa < min_epa:
-                        min_epa = epa
-                        with open(os.path.join(settings.output_dir,'min_epa.dat'), 'w', encoding='utf8') as fhandle:
-                            fhandle.write(str(min_epa))
-                    if max_tot_foce < 0.71:
-                        nextstep_seeds_bulk.append(pymatgen_structure.as_dict())
-                if 'cluster' in a_node.label:
-                    if max_tot_foce < 1.01:
-                        nextstep_seeds_cluster.append(pymatgen_structure.as_dict())
-
-        if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
-            if not a_node.outputs.output_parameters.dict['motion_step_info']['scf_converged'][-1]:
-                continue
-            total_energy = float(a_node.outputs.output_parameters.dict['motion_step_info']['energy_eV'][-1])
-            pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
-            nat = len(pymatgen_structure.sites)
-            epa = total_energy/nat
-            if epa < min_epa + e_window:
+            if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
+                if not a_node.outputs.output_parameters.dict['motion_step_info']['scf_converged'][-1]:
+                    continue
+                total_energy = float(a_node.outputs.output_parameters.dict['motion_step_info']['energy_eV'][-1])
+                pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
+                nat = len(pymatgen_structure.sites)
+                epa = total_energy/nat
+                if epa > min_epa + e_window:
+                    continue
                 forces = a_node.outputs.output_parameters.dict['motion_step_info']['forces'][-1]
                 tot_forces = []
                 for a_f in range(len(forces)):
                     tot_forces.append(math.sqrt(forces[a_f][0]**2 + forces[a_f][1]**2 + forces[a_f][2]**2))
                 max_tot_foce = max(tot_forces)
-                if 'bulk' in a_node.label:
-                    if epa < min_epa:
-                        min_epa = epa
-                        with open(os.path.join(settings.output_dir,'min_epa.dat'), 'w', encoding='utf8') as fhandle:
-                            fhandle.write(str(min_epa))
-                    if max_tot_foce < 0.71:
-                        nextstep_seeds_bulk.append(pymatgen_structure.as_dict())
-                if 'cluster' in a_node.label:
-                    if max_tot_foce < 1.01:
-                        nextstep_seeds_cluster.append(pymatgen_structure.as_dict())
+
+            if 'bulk' in a_node.label:
+                if epa < min_epa:
+                    min_epa = epa
+                    with open(os.path.join(settings.output_dir,'min_epa.dat'), 'w', encoding='utf8') as fhandle:
+                        fhandle.write(str(min_epa))
+                if max_tot_foce < 0.71:
+                    nextstep_seeds_bulk.append(pymatgen_structure.as_dict())
+            if 'cluster' in a_node.label:
+                if max_tot_foce < 1.01:
+                    nextstep_seeds_cluster.append(pymatgen_structure.as_dict())
     return nextstep_seeds_bulk, nextstep_seeds_cluster
 
 def store_seeds(cycle_number):
@@ -145,13 +140,16 @@ def step_4():
                 log_write('>>> Cannot proceed: parameters for cycle-{} {} are not provided <<<'.format(c_no, cycle_name)+'\n')
                 sys.exit()
             # mkdir
-            try:
-                os.mkdir(os.path.join(settings.Flame_dir,cycle_number,'train'))
-            except FileExistsError:
-                log_write('>>> Cannot proceed: {} exists <<<'.format(os.path.join(settings.Flame_dir,cycle_number,'train'))+'\n')
-                sys.exit()
-            # pre train
-            pre_train(cycle_number)
+            if not os.path.exists(os.path.join(settings.Flame_dir,cycle_number,'train','position_force_train_all.json')):
+                try:
+                    os.mkdir(os.path.join(settings.Flame_dir,cycle_number,'train'))
+                except FileExistsError:
+                    log_write('>>> Cannot proceed: {} exists <<<'.format(os.path.join(settings.Flame_dir,cycle_number,'train'))+'\n')
+                    sys.exit()
+                # pre train
+                pre_train(cycle_number)
+            else:
+                log_write('Found training data in {}'.format(os.path.join(settings.Flame_dir,cycle_number,'train')))
             # submit jobs
             controller = TrainSubmissionController(
                 group_label='wf_train',

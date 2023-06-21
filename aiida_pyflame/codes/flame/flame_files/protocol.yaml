@@ -60,7 +60,7 @@ minhocao:
     ann:
         approach: atombased
     geopt:
-        nit: 500
+        nit: 1000
         method: FIRE
         fmaxtol: 5.E-5
         strfact: 100.0
@@ -97,7 +97,7 @@ minhopp:
         core_rep: False
         core_rep_par: [2.0, 0.9]
     geopt:
-        nit: 500
+        nit: 1000
         method: FIRE
         fmaxtol: 5.E-5
         alphax: 1.0

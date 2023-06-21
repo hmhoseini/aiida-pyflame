@@ -111,7 +111,7 @@ class RefGeOptWorkChain(WorkChain):
         if not self.ctx['bulk'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['bulk'].called[0])
+        results_step3_group.add_nodes(self.ctx['bulk'])
 
 class Scheme1GeOptWorkChain(WorkChain):
     """ VASP calculations
@@ -168,7 +168,7 @@ class Scheme1GeOptWorkChain(WorkChain):
         if not self.ctx['opt2_bulk'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['opt2_bulk'].called[0])
+        results_step3_group.add_nodes(self.ctx['opt2_bulk'])
 
     def run_scaled_1(self):
         structure = self.ctx['opt2_bulk'].outputs['structure']
@@ -185,7 +185,7 @@ class Scheme1GeOptWorkChain(WorkChain):
         if not self.ctx['scaled_bulk_1'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_1'].called[0])
+        results_step3_group.add_nodes(self.ctx['scaled_bulk_1'])
 
     def run_scaled_2(self):
         structure = self.ctx['opt2_bulk'].outputs['structure']
@@ -202,7 +202,7 @@ class Scheme1GeOptWorkChain(WorkChain):
         if not self.ctx['scaled_bulk_2'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_2'].called[0])
+        results_step3_group.add_nodes(self.ctx['scaled_bulk_2'])
 
 class Scheme2GeOptWorkChain(WorkChain):
     """ VASP calculations
@@ -259,7 +259,7 @@ class Scheme2GeOptWorkChain(WorkChain):
         if not self.ctx['single_point_bulk'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['single_point_bulk'].called[0])
+        results_step3_group.add_nodes(self.ctx['single_point_bulk'])
 
     def run_scaled_1(self):
         structure = self.ctx['single_point_bulk'].outputs['structure']
@@ -276,7 +276,7 @@ class Scheme2GeOptWorkChain(WorkChain):
         if not self.ctx['scaled_bulk_1'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_1'].called[0])
+        results_step3_group.add_nodes(self.ctx['scaled_bulk_1'])
 
     def run_scaled_2(self):
         structure = self.ctx['single_point_bulk'].outputs['structure']
@@ -293,7 +293,7 @@ class Scheme2GeOptWorkChain(WorkChain):
         if not self.ctx['scaled_bulk_2'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_2'].called[0])
+        results_step3_group.add_nodes(self.ctx['scaled_bulk_2'])
 
 class ClusterGeOptWorkChain(WorkChain):
     """ VASP calculations
@@ -347,7 +347,7 @@ class ClusterGeOptWorkChain(WorkChain):
         if not self.ctx['opt2_cluster'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['opt2_cluster'].called[0])
+        results_step3_group.add_nodes(self.ctx['opt2_cluster'])
 
 class SinglePointtWorkChain(WorkChain):
     """ VASP calculations
@@ -389,4 +389,4 @@ class SinglePointtWorkChain(WorkChain):
         if not self.ctx['single_point'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_singlepoint_group.add_nodes(self.ctx['single_point'].called[0])
+        results_singlepoint_group.add_nodes(self.ctx['single_point'])

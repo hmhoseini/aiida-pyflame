@@ -175,7 +175,8 @@ def store_step3_results():
     epas = []
     seeds_bulk = []
     seeds_cluster = []
-    for a_node in results_step3_group.nodes:
+    for a_wch_node in results_step3_group.nodes:
+      for a_node in a_wch_node.called:
         if not a_node.is_finished_ok:
             continue
         if 'VASP' in inputs['ab_initio_code']:

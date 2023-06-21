@@ -160,143 +160,116 @@ def collect_training_data(cycle_number):
 
     results_group = Group.get(label='results_step3') if c_no == 1 else Group.get(label='results_singlepoint')
 
-    for a_node in results_group.nodes:
-        if not a_node.is_finished_ok:
-            continue
-        tmp_dict = {}
-        single_ionic_step = False
+    for a_wch_node in results_group.nodes:
+        for a_node in a_wch_node.called:
+            if not a_node.is_finished_ok:
+                continue
+            single_ionic_step = False
 
-        if 'VASP' in settings.inputs['ab_initio_code']:
-            if not a_node.outputs.misc.dict.run_status['electronic_converged']:
-                continue
-            total_energy = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
-            pymatgen_structure = a_node.outputs.structure.get_pymatgen()
-            forces = a_node.outputs.trajectory.get_array('forces')[-1].tolist()
-            if len(a_node.outputs.energies.get_array('electronic_steps')) == 1:
-                single_ionic_step = True
-        if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
-            if not a_node.outputs.output_parameters.dict['motion_step_info']['scf_converged'][-1]:
-                continue
-            total_energy = float(a_node.outputs.output_parameters.dict['motion_step_info']['energy_eV'][-1])
-            pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
-            forces = a_node.outputs.output_parameters.dict['motion_step_info']['forces'][-1]
-            if len(a_node.outputs.output_parameters.dict['motion_step_info']['step']) == 1:
-                single_ionic_step = True
-        nat = len(pymatgen_structure.sites)
-        epa = total_energy/nat
-        if epa < min_epa + e_window and is_structure_valid(pymatgen_structure, min_d_prefactor, True, False):
-            tmp_dict = {'structure' : pymatgen_structure.as_dict(),
-                        'forces'    : forces,
-                        'energy'    : total_energy
-                       }
-            if 'bulk' in a_node.label:
-                tmp_dict['bc'] = 'bulk'
-                plot_nat_b.append(nat)
-                plot_epa_b.append(epa)
-                plot_vpa_b.append(pymatgen_structure.volume/nat)
-            elif 'cluster' in a_node.label:
-                if not settings.inputs['cluster_calculation']:
+            if 'VASP' in settings.inputs['ab_initio_code']:
+                if not a_node.outputs.misc.dict.run_status['electronic_converged']:
                     continue
-                tmp_dict['bc'] = 'free'
-                plot_nat_c.append(nat)
-                plot_epa_c.append(epa)
-            training_data.append(tmp_dict)
-            tmp_dict = {}
+                total_energy = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
+                pymatgen_structure = a_node.outputs.structure.get_pymatgen()
+                forces = a_node.outputs.trajectory.get_array('forces')[-1].tolist()
+                if len(a_node.outputs.energies.get_array('electronic_steps')) == 1:
+                    single_ionic_step = True
+            if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
+                if not a_node.outputs.output_parameters.dict['motion_step_info']['scf_converged'][-1]:
+                    continue
+                total_energy = float(a_node.outputs.output_parameters.dict['motion_step_info']['energy_eV'][-1])
+                pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
+                forces = a_node.outputs.output_parameters.dict['motion_step_info']['forces'][-1]
+                if len(a_node.outputs.output_parameters.dict['motion_step_info']['step']) == 1:
+                    single_ionic_step = True
+            nat = len(pymatgen_structure.sites)
+            epa = total_energy/nat
+            if epa < min_epa + e_window and is_structure_valid(pymatgen_structure, min_d_prefactor, True, False):
+                tmp_dict = {'structure' : pymatgen_structure.as_dict(),
+                            'forces'    : forces,
+                            'energy'    : total_energy
+                           }
+                if 'bulk' in a_node.label:
+                    tmp_dict['bc'] = 'bulk'
+                    plot_nat_b.append(nat)
+                    plot_epa_b.append(epa)
+                    plot_vpa_b.append(pymatgen_structure.volume/nat)
+                elif 'cluster' in a_node.label:
+                    if not settings.inputs['cluster_calculation']:
+                        continue
+                    tmp_dict['bc'] = 'free'
+                    plot_nat_c.append(nat)
+                    plot_epa_c.append(epa)
+                training_data.append(tmp_dict)
 
-        if single_ionic_step:
-            continue
+            if single_ionic_step:
+                continue
 
-        maxmin_force = [[5.00,4.50],[4.50,4.00],[4.00,3.50],[3.50,3.00],\
-                        [3.00,2.80],[2.80,2.60],[2.60,2.40],[2.40,2.20],[2.20,2.00],\
-                        [2.00,1.80],[1.80,1.60],[1.60,1.40],[1.40,1.20],[1.20,1.00],\
-                        [1.00,0.80],[0.80,0.60],[0.60,0.40],\
-                        [0.40,0.30],[0.30,0.20],[0.20,0.10],\
-                        [0.10,0.09],[0.09,0.08],[0.08,0.07],[0.07,0.06],[0.06,0.05]]
-        found = len(maxmin_force) * [False]
+            maxmin_force = [[5.00,4.50],[4.50,4.00],[4.00,3.50],[3.50,3.00],\
+                            [3.00,2.80],[2.80,2.60],[2.60,2.40],[2.40,2.20],[2.20,2.00],\
+                            [2.00,1.80],[1.80,1.60],[1.60,1.40],[1.40,1.20],[1.20,1.00],\
+                            [1.00,0.80],[0.80,0.60],[0.60,0.40],\
+                            [0.40,0.30],[0.30,0.20],[0.20,0.10],\
+                            [0.10,0.09],[0.09,0.08],[0.08,0.07],[0.07,0.06],[0.06,0.05]]
+            found = len(maxmin_force) * [False]
 
-        if 'VASP' in settings.inputs['ab_initio_code']:
-            trajectory = a_node.outputs.trajectory
-            for ionic_step in range(len(a_node.outputs.energies.get_array('electronic_steps'))-1, 0, -1):
+            if 'VASP' in settings.inputs['ab_initio_code']:
+                trajectory = a_node.outputs.trajectory
+                for ionic_step in range(len(a_node.outputs.energies.get_array('electronic_steps'))-1, 0, -1):
+                    this_epot = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[ionic_step])
+                    this_structure = Structure(trajectory.get_array('cells')[ionic_step],\
+                                               a_node.outputs.structure.get_pymatgen().species,\
+                                               trajectory.get_array('positions')[ionic_step])
+                    nat = len(this_structure.sites)
+                    this_epa = this_epot/nat
+                    if this_epa < min_epa + e_window and is_structure_valid(this_structure, min_d_prefactor, True, False):
+                        this_forces = trajectory.get_array('forces')[ionic_step].tolist()
+                        this_tot_forces = []
+                        for a_f in range(len(this_forces)):
+                            this_tot_forces.append(math.sqrt(this_forces[a_f][0]**2 + this_forces[a_f][1]**2 + this_forces[a_f][2]**2))
+                        max_this_tot_force = max(this_tot_forces)
+            if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
+                motion_step = a_node.outputs.output_parameters.dict['motion_step_info']
+                for ionic_step in range(len(motion_step['step'])-1, 0, -1):
+                    if not motion_step['scf_converged'][ionic_step]:
+                        continue
+                    this_epot = motion_step['energy_eV'][ionic_step]
+                    this_structure = Structure(motion_step['cells'][ionic_step],\
+                                               motion_step['symbols'],\
+                                               motion_step['positions'][ionic_step-1],\
+                                               coords_are_cartesian=True)
+                    nat = len(this_structure.sites)
+                    this_epa = this_epot/nat
+                    if this_epa < min_epa + e_window and is_structure_valid(this_structure, min_d_prefactor, True, False):
+                        this_forces = motion_step['forces'][ionic_step-1]
+                        this_tot_forces = []
+                        for a_f in range(len(this_forces)):
+                            this_tot_forces.append(math.sqrt(this_forces[a_f][0]**2 + this_forces[a_f][1]**2 + this_forces[a_f][2]**2))
+                        max_this_tot_force = max(this_tot_forces)
+
+            for m_f in range(len(maxmin_force)):
                 if not False in found:
                     break
-                this_epot = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[ionic_step])
-                this_structure = Structure(trajectory.get_array('cells')[ionic_step],\
-                                           a_node.outputs.structure.get_pymatgen().species,\
-                                           trajectory.get_array('positions')[ionic_step])
-                nat = len(this_structure.sites)
-                this_epa = this_epot/nat
+                if not found[m_f] and max_this_tot_force < maxmin_force[m_f][0] and max_this_tot_force >= maxmin_force[m_f][1]:
+                    tmp_dict = {'structure': this_structure.as_dict(),
+                                'forces'   : this_forces,
+                                'energy'   : this_epot,
+                               }
+                    if 'bulk' in a_node.label:
+                        tmp_dict['bc'] = 'bulk'
+                        plot_nat_b.append(len(this_structure.sites))
+                        plot_epa_b.append(this_epa)
+                        plot_vpa_b.append(this_structure.volume/nat)
+                    elif 'cluster' in a_node.label:
+                        if not settings.inputs['cluster_calculation']:
+                            continue
+                        tmp_dict['bc'] = 'free'
+                        plot_nat_c.append(len(this_structure.sites))
+                        plot_epa_c.append(this_epa)
 
-                if this_epa < min_epa + e_window and is_structure_valid(this_structure, min_d_prefactor, True, False):
-                    this_forces = trajectory.get_array('forces')[ionic_step].tolist()
-                    this_tot_forces = []
-                    for a_f in range(len(this_forces)):
-                        this_tot_forces.append(math.sqrt(this_forces[a_f][0]**2 + this_forces[a_f][1]**2 + this_forces[a_f][2]**2))
-                    max_this_tot_foce = max(this_tot_forces)
-                    for m_f in range(len(maxmin_force)):
-                        if not found[m_f] and max_this_tot_foce < maxmin_force[m_f][0] and max_this_tot_foce >= maxmin_force[m_f][1]:
-                            tmp_dict = {'structure': this_structure.as_dict(),
-                                        'forces'   : this_forces,
-                                        'energy'   : this_epot,
-                                   }
-                            if 'bulk' in a_node.label:
-                                tmp_dict['bc'] = 'bulk'
-                                plot_nat_b.append(len(this_structure.sites))
-                                plot_epa_b.append(this_epa)
-                                plot_vpa_b.append(this_structure.volume/nat)
-                            elif 'cluster' in a_node.label:
-                                if not settings.inputs['cluster_calculation']:
-                                    continue
-                                tmp_dict['bc'] = 'free'
-                                plot_nat_c.append(len(this_structure.sites))
-                                plot_epa_c.append(this_epa)
-
-                            training_data.append(tmp_dict)
-                            tmp_dict = {}
-                            found[m_f] = True
-                            break
-        if 'SIRIUS' in settings.inputs['ab_initio_code'] or 'GTH' in settings.inputs['ab_initio_code']:
-            motion_step = a_node.outputs.output_parameters.dict['motion_step_info']
-            for ionic_step in range(len(motion_step['step'])-1, 0, -1):
-                if not False in found:
+                    training_data.append(tmp_dict)
+                    found[m_f] = True
                     break
-                if not motion_step['scf_converged'][ionic_step]:
-                    continue
-                this_epot = motion_step['energy_eV'][ionic_step]
-                this_structure = Structure(motion_step['cells'][ionic_step],\
-                                           motion_step['symbols'],\
-                                           motion_step['positions'][ionic_step-1],\
-                                           coords_are_cartesian=True)
-                nat = len(this_structure.sites)
-                this_epa = this_epot/nat
-
-                if this_epa >= min_epa and this_epa < min_epa + e_window and is_structure_valid(this_structure, min_d_prefactor, True, False):
-                    this_forces = motion_step['forces'][ionic_step-1]
-                    this_tot_forces = []
-                    for a_f in range(len(this_forces)):
-                        this_tot_forces.append(math.sqrt(this_forces[a_f][0]**2 + this_forces[a_f][1]**2 + this_forces[a_f][2]**2))
-                    max_this_tot_foce = max(this_tot_forces)
-                    for m_f in range(len(maxmin_force)):
-                        if not found[m_f] and max_this_tot_foce < maxmin_force[m_f][0] and max_this_tot_foce >= maxmin_force[m_f][1]:
-                            tmp_dict = {'structure': this_structure.as_dict(),
-                                        'forces'   : this_forces,
-                                        'energy'   : this_epot,
-                                   }
-                            if 'bulk' in a_node.label:
-                                tmp_dict['bc'] = 'bulk'
-                                plot_nat_b.append(len(this_structure.sites))
-                                plot_epa_b.append(this_epa)
-                                plot_vpa_b.append(this_structure.volume/nat)
-                            elif 'cluster' in a_node.label:
-                                if not settings.inputs['cluster_calculation']:
-                                    continue
-                                tmp_dict['bc'] = 'free'
-                                plot_nat_c.append(len(this_structure.sites))
-                                plot_epa_c.append(this_epa)
-
-                            training_data.append(tmp_dict)
-                            tmp_dict = {}
-                            found[m_f] = True
-                            break
 
     plot_1_train(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c)
 
