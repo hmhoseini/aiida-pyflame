@@ -139,17 +139,16 @@ def step_4():
             if len(settings.inputs['number_of_nodes']) < c_no:
                 log_write('>>> Cannot proceed: parameters for cycle-{} {} are not provided <<<'.format(c_no, cycle_name)+'\n')
                 sys.exit()
-            # mkdir
-            if not os.path.exists(os.path.join(settings.Flame_dir,cycle_number,'train','position_force_train_all.json')):
+            if os.path.exists(os.path.join(settings.Flame_dir,cycle_number,'train','position_force_train_all.json')) and\
+               os.path.exists(os.path.join(settings.Flame_dir,cycle_number,'train','ann_input.yaml')):
+                log_write('Found training data in {}'.format(os.path.join(settings.Flame_dir,cycle_number,'train')))
+            else:
                 try:
                     os.mkdir(os.path.join(settings.Flame_dir,cycle_number,'train'))
                 except FileExistsError:
                     log_write('>>> Cannot proceed: {} exists <<<'.format(os.path.join(settings.Flame_dir,cycle_number,'train'))+'\n')
                     sys.exit()
-                # pre train
                 pre_train(cycle_number)
-            else:
-                log_write('Found training data in {}'.format(os.path.join(settings.Flame_dir,cycle_number,'train')))
             # submit jobs
             controller = TrainSubmissionController(
                 group_label='wf_train',

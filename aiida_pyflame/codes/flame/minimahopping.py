@@ -45,7 +45,7 @@ def write_minhopp_files(folder, structure_dict, bc):
         yaml.dump_all(conf, fhandle, default_flow_style=None)
     with folder.open('input.minhopp', 'w', encoding='utf-8') as fhandle:
         fhandle.write('             0 number of minima already found'+'\n')
-        fhandle.write('   0.01    0.001  0.1      ediff,ekin,dt'+'\n')
+        fhandle.write('   0.01    0.001  0.05      ediff,ekin,dt'+'\n')
     return provenance_exclude_list
 
 def plot_minhopp(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c):
@@ -67,10 +67,10 @@ def plot_minhopp(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, p
         plt.scatter(plot_vpa_b,plot_epa_b, label='epa-vs-vpa')
         plt.xlabel(r'vpa ${\AA}^3/atom$')
         plt.ylabel(r'epa $eV/atom$')
-        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa_b), max(plot_epa_b)], linestyle='dashed', color='green')
+#        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa_b), max(plot_epa_b)], linestyle='dashed', color='green')
         plt.plot([min(vpas), min(vpas)], [min(plot_epa_b), max(plot_epa_b)], color='green')
         plt.plot([max(vpas), max(vpas)], [min(plot_epa_b), max(plot_epa_b)], color='orange')
-        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa_b), max(plot_epa_b)], linestyle='dashed', color='orange')
+#        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa_b), max(plot_epa_b)], linestyle='dashed', color='orange')
         plt.plot([min(plot_vpa_b), max(plot_vpa_b)], [min_epa, min_epa], color='navy')
         plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhopp_bulk_epa-vs-vpa.png'))
         plt.close()
@@ -177,10 +177,10 @@ def plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa):
         plt.scatter(plot_vpa,plot_epa, label='epa-vs-vpa')
         plt.xlabel(r'vpa ${\AA}^3/atom$')
         plt.ylabel(r'epa $eV/atom$')
-        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='green')
+#        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='green')
         plt.plot([min(vpas), min(vpas)], [min(plot_epa), max(plot_epa)], color='green')
         plt.plot([max(vpas), max(vpas)], [min(plot_epa), max(plot_epa)], color='orange')
-        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='orange')
+#        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='orange')
         plt.plot([min(plot_vpa), max(plot_vpa)], [min_epa, min_epa], color='navy')
         plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhocao_epa-vs-vpa.png'))
         plt.close()
@@ -264,6 +264,9 @@ def get_minhocao_seeds(cycle_number):
     selected_structs = sample(valid_structures, inputs['bulk_minhocao'][c_no-1])\
                      if len(valid_structures) > inputs['bulk_minhocao'][c_no-1]\
                      else valid_structures
+    if len(selected_structs) < inputs['bulk_minhocao'][c_no-1]:
+        q, r = divmod(inputs['bulk_minhocao'][c_no-1], len(selected_structs))
+        selected_structs = q * selected_structs + selected_structs[:r]
     return selected_structs
 
 def get_minhopp_seeds(cycle_number):
@@ -287,6 +290,9 @@ def get_minhopp_seeds(cycle_number):
     selected_seeds_bulk = sample(valid_seeds_bulk, inputs['bulk_minhopp'][c_no-1])\
                         if len(valid_seeds_bulk) > inputs['bulk_minhopp'][c_no-1]\
                         else valid_seeds_bulk
+    if len(selected_seeds_bulk) < inputs['bulk_minhopp'][c_no-1]:
+        q, r = divmod(inputs['bulk_minhopp'][c_no-1], len(selected_seeds_bulk))
+        selected_seeds_bulk = q * selected_seeds_bulk + selected_seeds_bulk[:r]
 
     with open(os.path.join(output_dir,'seeds_cluster.json'), 'r', encoding='utf-8') as fhandle:
         seeds_cluster = json.loads(fhandle.read())
@@ -303,4 +309,7 @@ def get_minhopp_seeds(cycle_number):
     selected_seeds_cluster = sample(valid_seeds_cluster, inputs['cluster_minhopp'][c_no-1])\
                            if len(valid_seeds_cluster) > inputs['cluster_minhopp'][c_no-1]\
                            else valid_seeds_cluster
+    if len(selected_seeds_cluster) < inputs['cluster_minhopp'][c_no-1]:
+        q, r = divmod(inputs['cluster_minhopp'][c_no-1], len(selected_seeds_cluster))
+        selected_seeds_cluster = q * selected_seeds_cluster + selected_seeds_cluster[:r]
     return selected_seeds_bulk, selected_seeds_cluster

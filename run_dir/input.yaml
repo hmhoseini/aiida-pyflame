@@ -1,6 +1,6 @@
 Chemical_formula: [] # more than one formula (a list) can be provided
-from_db: [] # either False or a list of databases to retrieve atomic structures
-from_local_db: False # if True, atomic structures will be retrieved from run_dir/local_db/known_bulk_structures.json (a list of dict representation pymatgen Structures)
+from_db: # either False or a list of databases to retrieve atomic structures. For example [mp, aflow]
+from_local_db: False # if True, atomic structures will be retrieved from run_dir/local_db/known_bulk_structures.json (a list of dict representation pymatgen Structure)
 
 # Number of atoms for bulk structures (list)
 bulk_number_of_atoms: []
@@ -29,7 +29,7 @@ number_of_nodes: [10, 10, 10, 10] # number of nodes in the hidden layer
 number_of_epoch: [11, 11, 11, 11] # number of epochs
 
 # minima hopping parameters
-minimahopping_time: [4.0, 24.0] # minmum and maximum hours for each minhocao calculation
+minimahopping_time: [12.0, 24.0] # minmum and maximum hours for each minhocao calculation
 #  minima hopping with variable cell
 minhocao_steps: [1, 50, 50]
 bulk_minhocao: [500, 500, 500] # maximum number of structures for minhocao calculations

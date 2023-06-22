@@ -57,9 +57,9 @@ The following values should be specified in the **config.py** file:
 
 |Values                |Description|
 |-|-|
-|DFT_code_string|Code label for DFT calculations. Available codes and their identifiers can be listed with *verdi code list*|
-|FLAME_code_string |Code label for FLAME calculations. Available codes and their identifiers can be listed with *verdi code list*|
-|VASP_potential_family|Potential family for VASP calculation. Available families of VASP potcar files can be listed with *verdi data vasp-potcar listfamilies*|
+|DFT_code_string|Code label for DFT calculations. Available codes and their identifiers can be listed with ``` verdi code list ```|
+|FLAME_code_string |Code label for FLAME calculations. Available codes and their identifiers can be listed with ```verdi code list```|
+|VASP_potential_family|Potential family for VASP calculation. Available families of VASP potcar files can be listed with ```verdi data vasp-potcar listfamilies```|
 |The following parameters should be specified for all jobs:|
 |number_of_jobs|The maximum number of jobs that will be submitted for an specifc job type.|
 |nodes|Number of nodes to be allocate for the job. See [slurm manual](https://slurm.schedmd.com/sbatch.html#OPT_nodes)|

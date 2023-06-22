@@ -35,12 +35,6 @@ def pre_train(cycle_number):
     else:
         g02s, g05s = get_symmetry_function(all_distances)
         write_symmetry_function(g02s, g05s, cycle_number)
-    with open(os.path.join(settings.Flame_dir,cycle_number,'train','nat_epa.dat'), 'w', encoding='utf8') as fhandle:
-        for i in range(len(training_data)):
-            nat = len(Structure.from_dict(training_data[i]['structure']).sites)
-            epot = training_data[i]['energy']
-            epa = epot/nat
-            fhandle.write('{} {}'.format(str(nat), str(epa))+'\n')
     plot_2_train(cycle_number, all_distances)
 
 def select_a_train(cycle_number):
