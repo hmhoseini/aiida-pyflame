@@ -142,9 +142,6 @@ def collect_training_data(cycle_number):
     with open(os.path.join(settings.output_dir,'min_epa.dat'), 'r', encoding='utf8') as fhandle:
         min_epa = float(fhandle.readline().strip())
     e_window = settings.inputs['energy_window']
-    min_d_prefactor = settings.inputs['min_distance_prefactor'] * ((100-float(settings.inputs['descending_prefactor']))/100)**(c_no-1)\
-                      if settings.inputs['descending_prefactor']\
-                      else settings.inputs['min_distance_prefactor']
     training_data = []
     plot_nat_b = []
     plot_epa_b = []
@@ -178,7 +175,7 @@ def collect_training_data(cycle_number):
                     single_ionic_step = True
             nat = len(pymatgen_structure.sites)
             epa = total_energy/nat
-            if epa < min_epa + e_window and is_structure_valid(pymatgen_structure, min_d_prefactor, True, False):
+            if epa < min_epa + e_window and is_structure_valid(pymatgen_structure, False, True, False):
                 tmp_dict = {'structure' : pymatgen_structure.as_dict(),
                             'forces'    : forces,
                             'energy'    : total_energy
@@ -216,7 +213,7 @@ def collect_training_data(cycle_number):
                                                trajectory.get_array('positions')[ionic_step])
                     nat = len(this_structure.sites)
                     this_epa = this_epot/nat
-                    if this_epa < min_epa + e_window and is_structure_valid(this_structure, min_d_prefactor, True, False):
+                    if this_epa < min_epa + e_window and is_structure_valid(this_structure, False, True, False):
                         this_forces = trajectory.get_array('forces')[ionic_step].tolist()
                         this_tot_forces = []
                         for a_f in range(len(this_forces)):
@@ -234,7 +231,7 @@ def collect_training_data(cycle_number):
                                                coords_are_cartesian=True)
                     nat = len(this_structure.sites)
                     this_epa = this_epot/nat
-                    if this_epa < min_epa + e_window and is_structure_valid(this_structure, min_d_prefactor, True, False):
+                    if this_epa < min_epa + e_window and is_structure_valid(this_structure, False, True, False):
                         this_forces = motion_step['forces'][ionic_step-1]
                         this_tot_forces = []
                         for a_f in range(len(this_forces)):

@@ -176,29 +176,29 @@ def store_step3_results():
     seeds_bulk = []
     seeds_cluster = []
     for a_wch_node in results_step3_group.nodes:
-      for a_node in a_wch_node.called:
-        if not a_node.is_finished_ok:
-            continue
-        if 'VASP' in inputs['ab_initio_code']:
-            if not a_node.outputs.misc.dict.run_status['electronic_converged']:
+        for a_node in a_wch_node.called:
+            if not a_node.is_finished_ok:
                 continue
-            total_energy = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
-            if total_energy > 0:
-                continue
-            pymatgen_structure = a_node.outputs.structure.get_pymatgen()
+            if 'VASP' in inputs['ab_initio_code']:
+                if not a_node.outputs.misc.dict.run_status['electronic_converged']:
+                    continue
+                total_energy = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
+                if total_energy > 0:
+                    continue
+                pymatgen_structure = a_node.outputs.structure.get_pymatgen()
 
-        if 'SIRIUS' in inputs['ab_initio_code'] or 'GTH' in inputs['ab_initio_code']:
-            total_energy = float(a_node.outputs.output_parameters.dict.energy)
-            if total_energy > 0:
-                continue
-            pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
+            if 'SIRIUS' in inputs['ab_initio_code'] or 'GTH' in inputs['ab_initio_code']:
+                total_energy = float(a_node.outputs.output_parameters.dict.energy)
+                if total_energy > 0:
+                    continue
+                pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
 
-        nat = len(pymatgen_structure.sites)
-        epa = total_energy/nat
-        epas.append(epa)
-        if is_structure_valid(pymatgen_structure, False, True, False):
+            nat = len(pymatgen_structure.sites)
+            epa = total_energy/nat
+            epas.append(epa)
             if nat in inputs['bulk_number_of_atoms'] and 'bulk' in a_node.label:
-                seeds_bulk.append(pymatgen_structure.as_dict())
+                if is_structure_valid(pymatgen_structure, False, True, False):
+                    seeds_bulk.append(pymatgen_structure.as_dict())
             if nat in inputs['cluster_number_of_atoms'] and 'cluster' in a_node.label:
                 cart_coords = pymatgen_structure.cart_coords
                 maxx = max(cart_coords[:,0:1])[0]
