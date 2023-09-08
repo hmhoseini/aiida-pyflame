@@ -127,9 +127,7 @@ class Scheme1GeOptWorkChain(WorkChain):
             cls.run_opt2,
             cls.inspect_calculation_2,
             cls.run_scaled_1,
-            cls.inspect_calculation_3,
-            cls.run_scaled_2,
-            cls.inspect_calculation_4)
+            cls.inspect_calculation_3)
         spec.exit_code(
             300, 'ERROR_CALCULATION_FAILED',
             message='The calculation did not finish successfully')
@@ -172,7 +170,7 @@ class Scheme1GeOptWorkChain(WorkChain):
 
     def run_scaled_1(self):
         structure = self.ctx['opt2_bulk'].outputs['structure']
-        scaled_structure = get_scaled_structure(0.90, structure)
+        scaled_structure = get_scaled_structure(0.95, structure)
         protocol = self.ctx.vasp_protocol['opt2']
         protocol['name'] = 'scaled_bulk'
         # builder
@@ -187,23 +185,6 @@ class Scheme1GeOptWorkChain(WorkChain):
             return self.exit_codes.ERROR_CALCULATION_FAILED
         results_step3_group.add_nodes(self.ctx['scaled_bulk_1'])
 
-    def run_scaled_2(self):
-        structure = self.ctx['opt2_bulk'].outputs['structure']
-        scaled_structure = get_scaled_structure(0.95, structure)
-        protocol = self.ctx.vasp_protocol['opt2']
-        protocol['name'] = 'scaled_bulk'
-        # builder
-        builder = construct_builder(scaled_structure, protocol, self.ctx.potential_mapping)
-        # submit
-        future = self.submit(builder)
-        self.to_context(**{'scaled_bulk_2': future})
-
-    def inspect_calculation_4(self):
-        if not self.ctx['scaled_bulk_2'].is_finished_ok:
-            self.report('The calculation did not finish successfully')
-            return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_2'])
-
 class Scheme2GeOptWorkChain(WorkChain):
     """ VASP calculations
     """
@@ -215,12 +196,8 @@ class Scheme2GeOptWorkChain(WorkChain):
             cls.initialize,
             cls.run_opt1vc,
             cls.inspect_calculation_1,
-            cls.run_single_point,
-            cls.inspect_calculation_2,
-            cls.run_scaled_1,
-            cls.inspect_calculation_3,
-            cls.run_scaled_2,
-            cls.inspect_calculation_4)
+            cls.run_opt2,
+            cls.inspect_calculation_2)
         spec.exit_code(
             300, 'ERROR_CALCULATION_FAILED',
             message='The calculation did not finish successfully')
@@ -245,55 +222,21 @@ class Scheme2GeOptWorkChain(WorkChain):
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
 
-    def run_single_point(self):
+    def run_opt2(self):
         structure = self.ctx['opt1vc'].outputs['structure']
-        protocol = self.ctx.vasp_protocol['single_point']
-        protocol['name'] = 'single_point_bulk'
+        protocol = self.ctx.vasp_protocol['opt2']
+        protocol['name'] = 'opt2_bulk'
         # builder
         builder = construct_builder(structure, protocol, self.ctx.potential_mapping)
         # submit
         future = self.submit(builder)
-        self.to_context(**{'single_point_bulk': future})
+        self.to_context(**{'opt2_bulk': future})
 
     def inspect_calculation_2(self):
-        if not self.ctx['single_point_bulk'].is_finished_ok:
+        if not self.ctx['opt2_bulk'].is_finished_ok:
             self.report('The calculation did not finish successfully')
             return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['single_point_bulk'])
-
-    def run_scaled_1(self):
-        structure = self.ctx['single_point_bulk'].outputs['structure']
-        scaled_structure = get_scaled_structure(0.90, structure)
-        protocol = self.ctx.vasp_protocol['opt2']
-        protocol['name'] = 'scaled_bulk'
-        # builder
-        builder = construct_builder(scaled_structure, protocol, self.ctx.potential_mapping)
-        # submit
-        future = self.submit(builder)
-        self.to_context(**{'scaled_bulk_1': future})
-
-    def inspect_calculation_3(self):
-        if not self.ctx['scaled_bulk_1'].is_finished_ok:
-            self.report('The calculation did not finish successfully')
-            return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_1'])
-
-    def run_scaled_2(self):
-        structure = self.ctx['single_point_bulk'].outputs['structure']
-        scaled_structure = get_scaled_structure(0.95, structure)
-        protocol = self.ctx.vasp_protocol['opt2']
-        protocol['name'] = 'scaled_bulk'
-        # builder
-        builder = construct_builder(scaled_structure, protocol, self.ctx.potential_mapping)
-        # submit
-        future = self.submit(builder)
-        self.to_context(**{'scaled_bulk_2': future})
-
-    def inspect_calculation_4(self):
-        if not self.ctx['scaled_bulk_2'].is_finished_ok:
-            self.report('The calculation did not finish successfully')
-            return self.exit_codes.ERROR_CALCULATION_FAILED
-        results_step3_group.add_nodes(self.ctx['scaled_bulk_2'])
+        results_step3_group.add_nodes(self.ctx['opt2_bulk'])
 
 class ClusterGeOptWorkChain(WorkChain):
     """ VASP calculations

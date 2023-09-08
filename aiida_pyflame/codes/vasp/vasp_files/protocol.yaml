@@ -55,7 +55,7 @@ opt2:
   incar:
     ALGO: Fast
     EDIFF: 1.0e-04
-    EDIFFG: -0.3
+    EDIFFG: -0.2
     ENCUT: 520
     GGA: PE
     IBRION: 2

@@ -63,7 +63,7 @@ def rerun():
         from aiida_pyflame.codes.flame.flame_launch_calculations import MinimaHoppingSubmissionController
         c_no = settings.restart['training_loop_start'][0]
         cycle_number = 'cycle-'+str(c_no)
-        log_write('resuming minima hopping calculations for cycle {}'.format(c_no))
+        log_write('resuming minima hopping calculations for cycle {}'.format(c_no)+'\n')
         # submit jobs
         controller = MinimaHoppingSubmissionController(
             parent_group_label='structures_minimahopping',
@@ -82,7 +82,7 @@ def rerun():
     elif 'singlepoint' in active_group.label:
         c_no = settings.restart['training_loop_start'][0]
         cycle_number = 'cycle-'+str(c_no)
-        log_write('resuming single point calculations for cycle {}'.format(c_no))
+        log_write('resuming single point calculations for cycle {}'.format(c_no)+'\n')
         # run jobs
         if 'VASP' in settings.inputs['ab_initio_code']:
             from aiida_pyflame.codes.vasp.vasp_launch_calculations import VASPSPSubmissionController

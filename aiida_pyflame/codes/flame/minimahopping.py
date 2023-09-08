@@ -67,10 +67,8 @@ def plot_minhopp(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, p
         plt.scatter(plot_vpa_b,plot_epa_b, label='epa-vs-vpa')
         plt.xlabel(r'vpa ${\AA}^3/atom$')
         plt.ylabel(r'epa $eV/atom$')
-#        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa_b), max(plot_epa_b)], linestyle='dashed', color='green')
         plt.plot([min(vpas), min(vpas)], [min(plot_epa_b), max(plot_epa_b)], color='green')
         plt.plot([max(vpas), max(vpas)], [min(plot_epa_b), max(plot_epa_b)], color='orange')
-#        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa_b), max(plot_epa_b)], linestyle='dashed', color='orange')
         plt.plot([min(plot_vpa_b), max(plot_vpa_b)], [min_epa, min_epa], color='navy')
         plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhopp_bulk_epa-vs-vpa.png'))
         plt.close()
@@ -177,10 +175,8 @@ def plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa):
         plt.scatter(plot_vpa,plot_epa, label='epa-vs-vpa')
         plt.xlabel(r'vpa ${\AA}^3/atom$')
         plt.ylabel(r'epa $eV/atom$')
-#        plt.plot([min(vpas)*0.85, min(vpas)*0.85], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='green')
         plt.plot([min(vpas), min(vpas)], [min(plot_epa), max(plot_epa)], color='green')
         plt.plot([max(vpas), max(vpas)], [min(plot_epa), max(plot_epa)], color='orange')
-#        plt.plot([max(vpas)*1.20, max(vpas)*1.20], [min(plot_epa), max(plot_epa)], linestyle='dashed', color='orange')
         plt.plot([min(plot_vpa), max(plot_vpa)], [min_epa, min_epa], color='navy')
         plt.savefig(os.path.join(Flame_dir,cycle_number,'minimahopping','minhocao_epa-vs-vpa.png'))
         plt.close()
@@ -198,7 +194,7 @@ def collect_minhocao_results(cycle_number):
                       else inputs['min_distance_prefactor']
     with open(os.path.join(output_dir,'vpa.dat'), 'r', encoding='utf8') as fhandle:
         vpas = [float(line.strip()) for line in fhandle]
-
+        vpa_limit = vpas[1]*2
     wf_minhocao_group = Group.get(label='wf_minimahopping')
     for a_wf_node in wf_minhocao_group.nodes:
         a_node = a_wf_node.called[-1]
@@ -210,7 +206,7 @@ def collect_minhocao_results(cycle_number):
                     epa = 27.2114 * epot/nat
                     structure = conf2pymatgenstructure([a_conf])[0]
                     vpa = structure.volume/len(structure.sites)
-                    if is_structure_valid(structure, min_d_prefactor, True, False) and vpa <= vpas[1]*2:
+                    if is_structure_valid(structure, min_d_prefactor, True, False) and vpa <= vpa_limit:
                         plot_nat.append(nat)
                         plot_epa.append(epa)
                         plot_vpa.append(vpa)
@@ -221,7 +217,7 @@ def collect_minhocao_results(cycle_number):
                     epa = 27.2114 * epot/nat
                     structure = conf2pymatgenstructure([a_conf])[0]
                     vpa = structure.volume/len(structure.sites)
-                    if is_structure_valid(structure, min_d_prefactor, True, False) and vpa <= vpas[1]*2:
+                    if is_structure_valid(structure, min_d_prefactor, True, False) and vpa <= vpa_limit:
                         posmds[nat].append(structure.as_dict())
             else:
                 failed_bulk.append(a_node.inputs.job_type_info.dict.minhocao['structure'])
@@ -293,23 +289,25 @@ def get_minhopp_seeds(cycle_number):
     if len(selected_seeds_bulk) < inputs['bulk_minhopp'][c_no-1]:
         q, r = divmod(inputs['bulk_minhopp'][c_no-1], len(selected_seeds_bulk))
         selected_seeds_bulk = q * selected_seeds_bulk + selected_seeds_bulk[:r]
-
-    with open(os.path.join(output_dir,'seeds_cluster.json'), 'r', encoding='utf-8') as fhandle:
-        seeds_cluster = json.loads(fhandle.read())
-    for c_no_i in range(1, c_no):
-        fpath = os.path.join(Flame_dir,'cycle-'+str(c_no_i),'minimahopping','nextstep_seeds_cluster.json')
-        if os.path.exists(fpath):
-            with open(fpath, 'r', encoding='utf-8') as fhandle:
-                seeds_cluster.extend(json.loads(fhandle.read()))
-    for a_cluster in seeds_cluster:
-        a_pymatgen_structure = Structure.from_dict(a_cluster)
-        if len(a_pymatgen_structure.sites) in inputs['cluster_number_of_atoms'] and\
-           is_structure_valid(a_pymatgen_structure, min_d_prefactor, False, False):
-            valid_seeds_cluster.append(a_pymatgen_structure)
-    selected_seeds_cluster = sample(valid_seeds_cluster, inputs['cluster_minhopp'][c_no-1])\
-                           if len(valid_seeds_cluster) > inputs['cluster_minhopp'][c_no-1]\
-                           else valid_seeds_cluster
-    if len(selected_seeds_cluster) < inputs['cluster_minhopp'][c_no-1]:
-        q, r = divmod(inputs['cluster_minhopp'][c_no-1], len(selected_seeds_cluster))
-        selected_seeds_cluster = q * selected_seeds_cluster + selected_seeds_cluster[:r]
+    if inputs['cluster_calculation']:
+        with open(os.path.join(output_dir,'seeds_cluster.json'), 'r', encoding='utf-8') as fhandle:
+            seeds_cluster = json.loads(fhandle.read())
+        for c_no_i in range(1, c_no):
+            fpath = os.path.join(Flame_dir,'cycle-'+str(c_no_i),'minimahopping','nextstep_seeds_cluster.json')
+            if os.path.exists(fpath):
+                with open(fpath, 'r', encoding='utf-8') as fhandle:
+                    seeds_cluster.extend(json.loads(fhandle.read()))
+        for a_cluster in seeds_cluster:
+            a_pymatgen_structure = Structure.from_dict(a_cluster)
+            if len(a_pymatgen_structure.sites) in inputs['cluster_number_of_atoms'] and\
+               is_structure_valid(a_pymatgen_structure, min_d_prefactor, False, False):
+               valid_seeds_cluster.append(a_pymatgen_structure)
+        selected_seeds_cluster = sample(valid_seeds_cluster, inputs['cluster_minhopp'][c_no-1])\
+                               if len(valid_seeds_cluster) > inputs['cluster_minhopp'][c_no-1]\
+                               else valid_seeds_cluster
+        if len(selected_seeds_cluster) < inputs['cluster_minhopp'][c_no-1]:
+            q, r = divmod(inputs['cluster_minhopp'][c_no-1], len(selected_seeds_cluster))
+            selected_seeds_cluster = q * selected_seeds_cluster + selected_seeds_cluster[:r]
+    else:
+        selected_seeds_cluster = []
     return selected_seeds_bulk, selected_seeds_cluster

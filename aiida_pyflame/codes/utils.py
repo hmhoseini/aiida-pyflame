@@ -61,7 +61,7 @@ def get_element_list():
 
 def get_known_structures(composition_list):
     """ Retruns retrieved structures (and max/min of their volume/atom)
-        available in give databases
+        available in given databases
     """
     structures_provides = {}
     known_structures = []
@@ -147,9 +147,13 @@ def is_structure_valid(structure, min_d_prefactor, check_angles, check_vpa):
         vpa = structure.volume/len(structure.sites)
         if vpa < vpas[0] or vpa > vpas[1]:
             return False
-
-    d_matrix = structure.distance_matrix
+    try:
+        d_matrix = structure.distance_matrix
+    except:
+        return False
     for isites in range(len(structure.sites)):
+        if abs(max(structure[isites].coords)) > max(structure.lattice.abc):
+            return False
         if not structure.get_neighbors(structure[isites], 5):
             return False
         if min_d_prefactor:
