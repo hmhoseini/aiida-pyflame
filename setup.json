@@ -1,0 +1,32 @@
+{
+    "author": "Hossein Mirhosseini",
+    "author_email": "mirhoseini@gmail.com",
+    "description": "AiiDA Plugin for running PyFLAME calculations",
+    "license": "",
+    "name": "aiida-pyflame",
+    "url": "https://github.com/hmhoseini/aiida-pyflame",
+    "version": "0.0",
+    "license": "MIT license",
+    "reentry_register": true,
+    "python_requires": ">=3.6",
+    "install_requires": [
+        "aiida-submission-controller", "aiida-pseudo", "mp-api"
+    ],
+    "entry_points": {
+	"aiida.calculations": [
+	    "flame = aiida_pyflame.codes.flame.flame_calculations:FlameCalculation"
+	],
+	"aiida.parsers": [
+	    "cp2k_efs_parser = aiida_pyflame.codes.cp2k.cp2k_parsers:Cp2kEFSParser",
+            "cp2k_simple_parser = aiida_pyflame.codes.cp2k.cp2k_parsers:Cp2kSimpleParser",
+            "pyflame_gensymcrys_parser = aiida_pyflame.codes.flame.flame_parsers: GenSymCrysParser",
+            "pyflame_averdist_parser = aiida_pyflame.codes.flame.flame_parsers: AverDistParser",
+	    "pyflame_train_parser = aiida_pyflame.codes.flame.flame_parsers: TrainParser",
+	    "pyflame_minhocao_parser = aiida_pyflame.codes.flame.flame_parsers: MinhocaoParser",
+	    "pyflame_minhopp_parser = aiida_pyflame.codes.flame.flame_parsers: MinhoppParser",
+	    "pyflame_divcheck_parser = aiida_pyflame.codes.flame.flame_parsers: DivCheckParser",
+            "pyflame_SP_parser = aiida_pyflame.codes.flame.flame_parsers: SPParser"
+	],
+	"aiida.workflows": []
+    }
+}
