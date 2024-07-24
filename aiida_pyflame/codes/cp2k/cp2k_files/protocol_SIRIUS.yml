@@ -9,7 +9,7 @@ opt1: # cluster
     PW_DFT:
       CONTROL:
         VERBOSITY: 1
-        MPI_GRID_DIMS: 1 2
+        MPI_GRID_DIMS: 1 1
         SPGLIB_TOLERANCE: 1.0E-6
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
@@ -76,7 +76,7 @@ opt1vc: # bulk
     PW_DFT:
       CONTROL:
         VERBOSITY: 1
-        MPI_GRID_DIMS: 1 2
+        MPI_GRID_DIMS: 1 1
         SPGLIB_TOLERANCE: 1.0E-6
       PARAMETERS: 
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
@@ -214,7 +214,7 @@ bulk: # reference
     PW_DFT:
       CONTROL:
         VERBOSITY: 1
-        MPI_GRID_DIMS: 1 2
+        MPI_GRID_DIMS: 1 1
         SPGLIB_TOLERANCE: 1.0E-6
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
@@ -289,7 +289,7 @@ single_point: # bulk/cluster
     PW_DFT:
       CONTROL:
         VERBOSITY: 1
-        MPI_GRID_DIMS: 1 2
+        MPI_GRID_DIMS: 1 1
         SPGLIB_TOLERANCE: 1.0E-6
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
@@ -331,7 +331,7 @@ dimer:
     PW_DFT:
       CONTROL:
         VERBOSITY: 1
-        MPI_GRID_DIMS: 1 2
+        MPI_GRID_DIMS: 1 1
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
         USE_SYMMETRY: TRUE

@@ -214,7 +214,6 @@ def is_structure_valid(structure, ref_structure, min_d_prefactor, check_angles, 
         if angles[0] > 145 or angles[0] < 45 or\
            angles[1] > 145 or angles[1] < 45 or\
            angles[2] > 145 or angles[2] < 45:
-            print('angle')
             return [False, 'angle']
     if check_vpa and not is_cluster:
         vpa = structure.volume/len(structure.sites)
@@ -226,11 +225,9 @@ def is_structure_valid(structure, ref_structure, min_d_prefactor, check_angles, 
     try:
         d_matrix = structure.distance_matrix
     except:
-        print('d')
         return [False, 'd_matrix']
     for isites in range(len(structure.sites)):
         if len(structure.get_neighbors(structure[isites], max_d)) < 2:
-            print('far')
             return [False, 'far']
         if min_d_prefactor:
             for jsites in range(len(structure.sites)):
@@ -240,7 +237,6 @@ def is_structure_valid(structure, ref_structure, min_d_prefactor, check_angles, 
                 if ref_structure:
                     min_d = min(min_d, ref_min_d * min_d_prefactor)
                 if d_matrix[isites,jsites] < min_d:
-                    print('close')
                     return [False, 'close']
     if is_cluster:
         cart_coords = structure.cart_coords
