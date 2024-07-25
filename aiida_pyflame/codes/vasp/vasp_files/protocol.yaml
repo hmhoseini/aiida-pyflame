@@ -72,30 +72,6 @@ opt2: # bulk
     PREC: Accurate
     SIGMA: 0.05
     SYMPREC: 5.0E-6
-#   #opt2c: #cluster
-# kpoint_distance: 10
-# incar:
-#   ALGO: Fast
-#   EDIFF: 1.0e-04
-#   EDIFFG: -0.5
-#   ENCUT: 520
-#   GGA: PE
-#   IBRION: 2
-#   ISMEAR: 0
-#   ISIF: 2
-#   ISPIN: 1
-#   ISYM: 2
-#   LCHARG: False
-#   LMAXMIX: 2
-#   LREAL: Auto
-#   LWAVE: False
-#   NCORE: 4
-#   NELM: 200
-#   NELMIN: 6
-#   NSW: 200
-#   POTIM: 0.1
-#   PREC: Accurate
-#   SIGMA: 0.05
 bulk: 
   kpoint_distance: 0.25
   incar:

@@ -1,4 +1,4 @@
-basis_pseudo: pseudopotentials.yml
+basis_pseudo: SSSP_1.3.0_PBE_precision.json
 opt1: # cluster
   kpoints_distance: 10
   GLOBAL:
@@ -14,17 +14,17 @@ opt1: # cluster
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
         USE_SYMMETRY: TRUE
-        PW_CUTOFF: 20
-        GK_CUTOFF: 5
+        PW_CUTOFF: 0 #
+        GK_CUTOFF: 0 #
         NUM_DFT_ITER: 100
         SMEARING: GAUSSIAN
-        SMEARING_WIDTH: 0.0004
+        SMEARING_WIDTH: 0.0001
         DENSITY_TOL: 1.0E-6
         ENERGY_TOL: 3.675e-6 #1e-4 eV
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.3
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675e-6 #1e-4 eV
@@ -81,17 +81,17 @@ opt1vc: # bulk
       PARAMETERS: 
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
         USE_SYMMETRY: TRUE
-        PW_CUTOFF: 20
-        GK_CUTOFF: 5
+        PW_CUTOFF: 0 #
+        GK_CUTOFF: 0 #
         NUM_DFT_ITER: 100
         SMEARING: GAUSSIAN
-        SMEARING_WIDTH: 0.0004
+        SMEARING_WIDTH: 0.0001
         DENSITY_TOL: 1.0E-6
         ENERGY_TOL: 3.675e-6 #1e-4 eV
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.3
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675e-6 #1e-4 eV
@@ -219,13 +219,13 @@ bulk: # reference
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
         USE_SYMMETRY: TRUE
-        PW_CUTOFF: 32
-        GK_CUTOFF: 8
+        PW_CUTOFF: 0 #
+        GK_CUTOFF: 0 #
         NUM_DFT_ITER: 100
         SMEARING: GAUSSIAN
-        SMEARING_WIDTH: 0.0004 # Ha 0.01 eV
+        SMEARING_WIDTH: 0.0001
         DENSITY_TOL: 1.0E-6
-        ENERGY_TOL: 3.675e-6 #1e-4 eV
+        ENERGY_TOL: 1.0E-6
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
@@ -294,17 +294,17 @@ single_point: # bulk/cluster
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
         USE_SYMMETRY: TRUE
-        PW_CUTOFF: 32
-        GK_CUTOFF: 8
+        PW_CUTOFF: 0 #
+        GK_CUTOFF: 0 #
         NUM_DFT_ITER: 100
         SMEARING: GAUSSIAN
-        SMEARING_WIDTH: 0.0004 # Ha 0.01 eV
+        SMEARING_WIDTH: 0.0001
         DENSITY_TOL: 1.0E-6
-        ENERGY_TOL: 3.675e-6 #1e-4 eV
+        ENERGY_TOL: 1.0E-6
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.3
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675e-6
@@ -335,17 +335,17 @@ dimer:
       PARAMETERS:
         ELECTRONIC_STRUCTURE_METHOD: pseudopotential
         USE_SYMMETRY: TRUE
-        PW_CUTOFF: 32
-        GK_CUTOFF: 8
+        PW_CUTOFF: 0 #
+        GK_CUTOFF: 0 #
         NUM_DFT_ITER: 100
         SMEARING: GAUSSIAN
-        SMEARING_WIDTH: 0.0004 # Ha 0.01 eV
+        SMEARING_WIDTH: 0.0001
         DENSITY_TOL: 1.0E-6
         ENERGY_TOL: 3.675e-6 #1e-4 eV
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.3
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675e-6

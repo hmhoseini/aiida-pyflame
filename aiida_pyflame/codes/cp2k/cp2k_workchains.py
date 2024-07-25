@@ -2,6 +2,7 @@ import os
 from random import uniform
 import collections
 from copy import deepcopy
+import json
 import yaml
 from aiida.plugins import WorkflowFactory, DataFactory
 from aiida.engine import WorkChain
@@ -35,7 +36,7 @@ def get_options():
         options.update({'custom_scheduler_commands' : '#SBATCH --exclusive'})
     return options
 
-def get_kinds_section(structure, basis_pseudo, QSorSIRIUS, magnetization_tags=None):
+def get_kinds_section_QS(structure, basis_pseudo, magnetization_tags=None):
     """ Write the &KIND section
         Taken from aiida-commonworkflow
     """
@@ -50,49 +51,86 @@ def get_kinds_section(structure, basis_pseudo, QSorSIRIUS, magnetization_tags=No
         new_atom = {
             '_': symbol if tag == '0' else symbol + tag,
         }
-        if 'QS' in QSorSIRIUS:
-            new_atom['BASIS_SET'] = atom_data['basis_set'][symbol]
-            new_atom['POTENTIAL'] = atom_data['pseudopotential'][symbol]
-        if 'SIRIUS' in QSorSIRIUS:
-            new_atom = {
-                '_': symbol if tag == '0' else symbol + tag,
-                'POTENTIAL': 'UPF ' + atom_data['UPF_pseudopotential'][symbol],
-            }
+        new_atom['BASIS_SET'] = atom_data['basis_set'][symbol]
+        new_atom['POTENTIAL'] = atom_data['pseudopotential'][symbol]
 
         if magnetization_tags:
             new_atom['MAGNETIZATION'] = magnetization_tags[tag]
         kinds.append(new_atom)
-#    return {'FORCE_EVAL': {'SUBSYS': {'KIND': kinds, 'CELL': {}}}}
     return {'FORCE_EVAL': {'SUBSYS': {'KIND': kinds}}}
 
-def get_file_section(structure, QSorSIRIUS):
-    """ Potential files for SIRIUS/QS
+def get_kinds_section_SIRIUS(structure, basis_pseudo, magnetization_tags=None):
+    """ Write the &KIND section
+        Taken from aiida-commonworkflow
+    """
+    kinds = []
+    with open(os.path.join(settings.CP2K_input_files_path, basis_pseudo), 'rb') as fhandle:
+        atom_data = json.loads(fhandle.read())
+    ase_structure = structure.get_ase()
+    symbol_tag = {
+    (symbol, str(tag)) for symbol, tag in zip(ase_structure.get_chemical_symbols(), ase_structure.get_tags())
+    }
+    for symbol, tag in symbol_tag:
+        new_atom = {
+            '_': symbol if tag == '0' else symbol + tag,
+        }
+        filename = os.path.splitext(atom_data[symbol]['filename'])[0]+'.json'
+        new_atom = {
+            '_': symbol if tag == '0' else symbol + tag,
+            'POTENTIAL': 'UPF ' + filename,
+        }
+
+        if magnetization_tags:
+            new_atom['MAGNETIZATION'] = magnetization_tags[tag]
+        kinds.append(new_atom)
+    return {'FORCE_EVAL': {'SUBSYS': {'KIND': kinds}}}
+
+def get_cutoff_SIRIUS(structure, basis_pseudo):
+    pw_cutoff = 0
+    gk_cutoff = 0
+    with open(os.path.join(settings.CP2K_input_files_path, basis_pseudo), 'rb') as fhandle:
+        atom_data = json.loads(fhandle.read())
+    ase_structure = structure.get_ase()
+    symbol_tag = {
+    (symbol, str(tag)) for symbol, tag in zip(ase_structure.get_chemical_symbols(), ase_structure.get_tags())
+    }
+    for symbol, tag in symbol_tag:
+        pw_cutoff = max(pw_cutoff, round((atom_data[symbol]['cutoff_rho'])**0.5))
+        gk_cutoff = max(gk_cutoff, round((atom_data[symbol]['cutoff_wfc'])**0.5))
+    return pw_cutoff, gk_cutoff
+
+def get_file_section_QS():
+    """ Potential files for QS
     """
     files_dict =  {}
-    if 'SIRIUS' in QSorSIRIUS:
-        with open(os.path.join(settings.CP2K_input_files_path,'pseudopotentials.yml'), 'rb') as fhandle:
-            atom_data = yaml.safe_load(fhandle)
+    with open(os.path.join(settings.CP2K_input_files_path,'GTH_POTENTIALS'), 'rb') as handler:
+        potential = SinglefileData(file=handler)
+    files_dict['potential'] = potential
+    with open(os.path.join(settings.CP2K_input_files_path,'GTH_BASIS_SETS'), 'rb') as handle:
+        basis_gth = SinglefileData(file=handle)
+    files_dict['basis_gth'] = basis_gth
+    with open(os.path.join(settings.CP2K_input_files_path,'BASIS_MOLOPT'), 'rb') as handle:
+        basis_molopt = SinglefileData(file=handle)
+    files_dict['basis_molopt'] = basis_molopt
+    with open(os.path.join(settings.CP2K_input_files_path,'BASIS_MOLOPT_UCL'), 'rb') as handle:
+        basis_molopt_ucl = SinglefileData(file=handle)
+    files_dict['basis_molopt_ucl'] = basis_molopt_ucl
+    return files_dict
 
-            ase_structure = structure.get_ase()
-            symbol_tag = {
-            (symbol, str(tag)) for symbol, tag in zip(ase_structure.get_chemical_symbols(), ase_structure.get_tags())
-            }
-            for symbol, tag in symbol_tag:
-                with open(os.path.join(settings.CP2K_input_files_path,'pseudopotentials',atom_data['UPF_pseudopotential'][symbol]), 'rb') as fhandle:
-                    files_dict[symbol] = SinglefileData(file=fhandle)
-    else:
-        with open(os.path.join(settings.CP2K_input_files_path,'GTH_POTENTIALS'), 'rb') as handler:
-            potential = SinglefileData(file=handler)
-        files_dict['potential'] = potential
-        with open(os.path.join(settings.CP2K_input_files_path,'GTH_BASIS_SETS'), 'rb') as handle:
-            basis_gth = SinglefileData(file=handle)
-        files_dict['basis_gth'] = basis_gth
-        with open(os.path.join(settings.CP2K_input_files_path,'BASIS_MOLOPT'), 'rb') as handle:
-            basis_molopt = SinglefileData(file=handle)
-        files_dict['basis_molopt'] = basis_molopt
-        with open(os.path.join(settings.CP2K_input_files_path,'BASIS_MOLOPT_UCL'), 'rb') as handle:
-            basis_molopt_ucl = SinglefileData(file=handle)
-        files_dict['basis_molopt_ucl'] = basis_molopt_ucl
+def get_file_section_SIRIUS(structure, basis_pseudo):
+    """ Potential files for SIRIUS
+    """
+    files_dict =  {}
+    with open(os.path.join(settings.CP2K_input_files_path,basis_pseudo), 'rb') as fhandle:
+        atom_data = json.loads(fhandle.read())
+    ase_structure = structure.get_ase()
+    symbol_tag = {
+    (symbol, str(tag)) for symbol, tag in zip(ase_structure.get_chemical_symbols(), ase_structure.get_tags())
+    }
+    for symbol, tag in symbol_tag:
+        filename = os.path.splitext(atom_data[symbol]['filename'])[0]+'.json'
+        with open(os.path.join(settings.CP2K_input_files_path,'pseudopotentials',filename), 'rb') as fhandle:
+            files_dict[symbol] = SinglefileData(file=fhandle)
     return files_dict
 
 def get_kpoints(kpoints_distance, structure):
@@ -117,23 +155,28 @@ def construct_builder(structure, parameters, basis_pseudo, QSorSIRIUS):
     if 'QS' in QSorSIRIUS:
         if mesh != [1, 1, 1]:
             builder.cp2k.kpoints = kpoints
+        dict_merge(parameters, get_kinds_section_QS(structure, basis_pseudo))
+        builder.cp2k.file = get_file_section_QS()
     if 'SIRIUS' in QSorSIRIUS:
         if mesh != [1, 1, 1]:
             parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['NGRIDK'] = f'{mesh[0]} {mesh[1]} {mesh[2]}'
+        else:
+            parameters['FORCE_EVAL']['PW_DFT']['CONTROL']['MPI_GRID_DIMS'] = f'{1} {settings.job_script["geopt"]["ntasks"]}'
         cell = parameters['FORCE_EVAL']['SUBSYS']['CELL']
         for i, keys in enumerate(cell.keys()):
             cell[keys] = f'{cell[keys]} {round(structure.cell[i][0],14):<15} {round(structure.cell[i][1],14):<15} {round(structure.cell[i][2],14):<15}'
-#        parameters['FORCE_EVAL']['PW_DFT']['CONTROL']['MPI_GRID_DIMS'] = f'{1} {4}'
-        dict_merge(parameters, get_kinds_section(structure, basis_pseudo, QSorSIRIUS))
+        dict_merge(parameters, get_kinds_section_SIRIUS(structure, basis_pseudo))
+        builder.cp2k.file = get_file_section_SIRIUS(structure, basis_pseudo)
+        pw_cutoff, gk_cutoff = get_cutoff_SIRIUS(structure, basis_pseudo)
+        parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF'] = pw_cutoff
+        parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF'] = gk_cutoff
+        dict_merge(parameters, get_kinds_section_SIRIUS(structure, basis_pseudo))
     if job_type in ['opt1c', 'opt2_cluster', 'single_point_cluster', 'molecule', 'dimer']:
-#        parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['MOLECULE'] = 'TRUE'
         periodic = None
     else:
         periodic = 'XYZ'
     parameters['FORCE_EVAL']['SUBSYS']['CELL']['PERIODIC'] = periodic
-
     builder.cp2k.parameters = Dict(dict=parameters)
-    builder.cp2k.file = get_file_section(structure, QSorSIRIUS)
     builder.cp2k.code = Code.get_from_string(settings.configs['aiida_settings']['DFT_code_string'])
     builder.cp2k.settings = Dict(dict={
         'additional_retrieve_list': ['aiida.inp',
@@ -148,7 +191,7 @@ def construct_builder(structure, parameters, basis_pseudo, QSorSIRIUS):
     else:
         builder.cp2k.metadata.options['parser_name'] = 'cp2k_efs_parser'
     builder.handler_overrides = Dict(dict={'restart_incomplete_calculation': {'enabled': False}})
-    builder.max_iterations = Int(2)
+    builder.max_iterations = Int(1)
     builder.cp2k.metadata['label'] = job_type
     return builder
 
