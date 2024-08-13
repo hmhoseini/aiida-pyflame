@@ -137,6 +137,11 @@ def get_calculation_nodes(group_label, node_label):
     return calcjob_nodes
 
 def collect_minhopp_results(cycle_number):
+    min_epa = 0
+    known_structures_group = Group.collection.get(label='known_structures')
+    for a_node in known_structures_group.nodes:
+        if 'epas' in a_node.label:
+            min_epa = min(a_node.get_list())
     poslows_bulk = defaultdict(list)
     trajs_bulk = defaultdict(list)
     failed_bulk = []
@@ -154,7 +159,9 @@ def collect_minhopp_results(cycle_number):
     calculation_nodes_b = get_calculation_nodes('wf_minimahopping', 'minhopp_bulk_'+cycle_number)
     calculation_nodes_c = get_calculation_nodes('wf_minimahopping', 'minhopp_cluster_'+cycle_number)
     for a_node in calculation_nodes_b + calculation_nodes_c:
-        is_cluster = True if 'cluster' in a_node.label else False
+        is_cluster = False
+        if 'cluster' in a_node.label:
+            is_cluster = True
         if not a_node.is_finished_ok:
             if is_cluster:
                 failed_cluster.append(a_node.inputs.job_type_info.dict.minhopp['structure'])
@@ -166,16 +173,20 @@ def collect_minhopp_results(cycle_number):
             epot = a_conf['conf']['epot']
             nat = a_conf['conf']['nat']
             epa = 27.2114 * epot/nat
-            if epa > 3:
-                continue
             structure = conf2pymatgenstructure([a_conf])[0]
             is_struct_valid = is_structure_valid(structure, ref_structure, 0.80, False, False, is_cluster)
             if is_struct_valid[0]:
                 if is_cluster:
+                    if epa > 0 or epa < min_epa:
+                        rejected_cluster.append(structure.as_dict())
+                        continue
                     plot_nat_c.append(nat)
                     plot_epa_c.append(epa)
                     poslows_cluster[nat].append(structure.as_dict())
                 else:
+                    if epa > 0 or epa < min_epa:
+                        rejected_bulk.append(structure.as_dict())
+                        continue
                     volume = structure.volume
                     vpa = volume/nat
                     plot_nat_b.append(nat)
@@ -191,13 +202,18 @@ def collect_minhopp_results(cycle_number):
             epot = a_conf['conf']['epot']
             nat = a_conf['conf']['nat']
             epa = 27.2114 * epot/nat
-            if epa > 3:
-                continue
             structure = conf2pymatgenstructure([a_conf])[0]
-            if is_structure_valid(structure, ref_structure, 0.80, False, False, is_cluster)[0]:
+            is_struct_valid = is_structure_valid(structure, ref_structure, 0.80, False, False, is_cluster)
+            if is_struct_valid[0]:
                 if is_cluster:
+                    if epa > 0 or epa < min_epa:
+                        rejected_cluster.append(structure.as_dict())
+                        continue
                     trajs_cluster[nat].append(structure.as_dict())
                 else:
+                    if epa > 0 or epa < min_epa:
+                        rejected_bulk.append(structure.as_dict())
+                        continue
                     trajs_bulk[nat].append(structure.as_dict())
 
     plot_minhopp(cycle_number, plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c)
@@ -227,14 +243,19 @@ def store_minhopp_results(cycle_number):
     nats = {}
     nats_bulk = []
     nats_cluster = []
+    log_write('minhopp report:'+'\n')
     for keys, values in poslows_bulk.items():
-        log_write(f'Number of generated bulk structures (minhopp) with {keys} atoms: {len(values)}'+'\n')
+        log_write(f'Number of generated bulk structures with {keys} atoms: {len(values)}'+'\n')
         nats_bulk.append(str(keys))
-    log_write(f'Number of bulk structures from trajectories (minhopp): {len(trajs_bulk)}'+'\n')
+    log_write(f'Number of bulk structures from trajectories: {len(trajs_bulk)}'+'\n')
+    log_write(f'Number of rejected bulk structures: {len(rejected_bulk)}'+'\n')
+    log_write(f'Number of failed bulk calculations: {len(failed_bulk)}'+'\n')
     for keys, values in poslows_cluster.items():
-        log_write(f'Number of generated cluster structures (minhopp) with {keys} atoms: {len(values)}'+'\n')
+        log_write(f'Number of generated cluster structures with {keys} atoms: {len(values)}'+'\n')
         nats_cluster.append(str(keys))
-    log_write(f'Number of cluster structures from trajectories (minhopp): {len(trajs_cluster)}'+'\n')
+    log_write(f'Number of cluster structures from trajectories: {len(trajs_cluster)}'+'\n')
+    log_write(f'Number of rejected cluster structures: {len(rejected_cluster)}'+'\n')
+    log_write(f'Number of failed cluster calculations: {len(failed_cluster)}'+'\n')
     nats['bulk'] = nats_bulk
     nats['cluster'] = nats_cluster
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','nats_minhopp.json'), 'w', encoding='utf8') as fhandle:
@@ -271,7 +292,12 @@ def plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa):
         plt.close()
 
 def collect_minhocao_results(cycle_number):
-    failed_bulk = []
+    min_epa = 0
+    known_structures_group = Group.collection.get(label='known_structures')
+    for a_node in known_structures_group.nodes:
+        if 'epas' in a_node.label:
+            min_epa = min(a_node.get_list())
+    failed_structures = []
     rejected_structures = []
     poslows = defaultdict(list)
     posmds = defaultdict(list)
@@ -282,18 +308,19 @@ def collect_minhocao_results(cycle_number):
     calcjob_nodes = get_calculation_nodes('wf_minimahopping', 'minhocao_'+cycle_number)
     for a_node in calcjob_nodes:
         if not a_node.is_finished_ok:
-            failed_bulk.append(a_node.inputs.job_type_info.dict.minhocao['structure'])
+            failed_structures.append(a_node.inputs.job_type_info.dict.minhocao['structure'])
             continue
         for a_conf in a_node.outputs.output_parameters['poslows']:
             epot = a_conf['conf']['epot']
             nat = a_conf['conf']['nat']
             epa = 27.2114 * epot/nat
-            if epa > 1:
-                continue
             structure = conf2pymatgenstructure([a_conf])[0]
             vpa = structure.volume/len(structure.sites)
             is_struct_valid = is_structure_valid(structure, False, 0.80, True, [0.5,2], False)
             if is_struct_valid[0]:
+                if epa > 0 or epa < min_epa:
+                    rejected_structures.append(structure.as_dict())
+                    continue
                 plot_nat.append(nat)
                 plot_epa.append(epa)
                 plot_vpa.append(vpa)
@@ -304,32 +331,36 @@ def collect_minhocao_results(cycle_number):
             epot = a_conf['conf']['epot']
             nat = a_conf['conf']['nat']
             epa = 27.2114 * epot/nat
-            if epa > 1:
-                continue
             structure = conf2pymatgenstructure([a_conf])[0]
             vpa = structure.volume/len(structure.sites)
             if is_structure_valid(structure, False, 0.80, True, [0.5, 2], False)[0]:
+                if epa > 0 or epa < min_epa:
+                    rejected_structures.append(structure.as_dict())
+                    continue
                 posmds[nat].append(structure.as_dict())
     plot_minhocao(cycle_number, plot_nat, plot_epa, plot_vpa)
-    return poslows, posmds, rejected_structures, failed_bulk
+    return poslows, posmds, rejected_structures, failed_structures
 
 def store_minhocao_results(cycle_number):
-    poslows, posmds, rejected_structures, failed_bulk = collect_minhocao_results(cycle_number)
+    poslows, posmds, rejected_structures, failed_structures = collect_minhocao_results(cycle_number)
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','poslows-'+cycle_number+'.json'), 'w', encoding='utf8') as fhandle:
         json.dump(poslows, fhandle)
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','posmds-'+cycle_number+'.json'), 'w', encoding='utf8') as fhandle:
         json.dump(posmds, fhandle)
-#    with open(os.path.join(Flame_dir,cycle_number,'minimahopping','failed_bulk.json'), 'w', encoding='utf8') as fhandle:
-#        json.dump(failed_bulk, fhandle)
+    with open(os.path.join(Flame_dir,cycle_number,'minimahopping','failed_structures.json'), 'w', encoding='utf8') as fhandle:
+        json.dump(failed_structures, fhandle)
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','rejected_structures.json'), 'w', encoding='utf8') as fhandle:
         json.dump(rejected_structures, fhandle)
 
     nats = {}
     nats_bulk = []
+    log_write('minhocao report:'+'\n')
     for keys, values in poslows.items():
-        log_write(f'Number of generated bulk structures (minhocao) with {keys} atoms: {len(values)}'+'\n')
+        log_write(f'Number of generated bulk structures with {keys} atoms: {len(values)}'+'\n')
         nats_bulk.append(str(keys))
-    log_write(f'Number of bulk structures from trajectories (minhocao): {len(posmds)}'+'\n')
+    log_write(f'Number of bulk structures from trajectories: {len(posmds)}'+'\n')
+    log_write(f'Number of rejected structures: {len(rejected_structures)}'+'\n')
+    log_write(f'Number of failed calculations: {len(failed_structures)}'+'\n')
     nats['bulk'] = nats_bulk
     with open(os.path.join(Flame_dir,cycle_number,'minimahopping','nats_minhocao.json'), 'w', encoding='utf8') as fhandle:
         json.dump(nats, fhandle)
