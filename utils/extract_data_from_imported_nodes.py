@@ -12,7 +12,7 @@ from aiida.manage.configuration import load_profile
 
 load_profile()
 
-def collect_author_data(group_label='imported_calculation_nodes'):
+def get_author_data(group_label='imported_calculation_nodes'):
     builder = QueryBuilder()
     builder.append(Group, filters={'label': group_label}, tag='group')
     builder.append(Node, with_group='group', filters={'label': 'author_data'}, project='id')
@@ -20,7 +20,7 @@ def collect_author_data(group_label='imported_calculation_nodes'):
     author_data = load_node(pk).get_dict()
     return author_data
 
-def collect_input_data(group_label='imported_calculation_nodes'):
+def get_input_data(group_label='imported_calculation_nodes'):
     builder = QueryBuilder()
     builder.append(Group, filters={'label': group_label}, tag='group')
     builder.append(Node, with_group='group', filters={'label': 'inputs'}, project='id')
@@ -28,12 +28,16 @@ def collect_input_data(group_label='imported_calculation_nodes'):
     inputs = load_node(pk).get_dict()
     return inputs
 
-def collect_protocol(group_label='imported_calculation_nodes'):
+def get_protocol(input_parameters, code, group_label='imported_calculation_nodes'):
     builder = QueryBuilder()
     builder.append(Group, filters={'label': group_label}, tag='group')
     builder.append(Node, with_group='group', filters={'label': 'protocol'}, project='id')
     pk = builder.all(flat=True)[0]
     protocol = load_node(pk).get_dict()
+    if 'SIRIUS' in code:
+        protocol['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF'] = input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF']
+        protocol['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF'] = input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF']
+        protocol['FORCE_EVAL'].pop('PRINT')
     return protocol
 
 def collect_node_data(group_label, code):
@@ -50,6 +54,9 @@ def collect_node_data(group_label, code):
 
     code_version_1 = None
     code_version_2 = None
+    gk_cutoff = None
+    pw_cutoff = None
+    xc_functional = None
     pps = {}
     if 'VASP' in code:
         for a_node in calcjob_nodes:
@@ -61,6 +68,8 @@ def collect_node_data(group_label, code):
             if not 'VaspCalculation' in a_node.process_label:
                 print('wrong code label')
                 sys.exit()
+            input_parameters = a_node.inputs.parameters
+
             if not code_version_1:
                 code_version_1 = a_node.outputs.misc.get('version')
             else:
@@ -95,6 +104,8 @@ def collect_node_data(group_label, code):
             if 'Cp2kCalculation' not in a_node.process_label:
                 print('wrong code label')
                 sys.exit()
+            input_parameters = a_node.inputs.parameters
+
             if output_parameters['SIRIUS']:
                 if not code_version_1:
                     code_version_1 = output_parameters['cp2k_version']
@@ -108,6 +119,16 @@ def collect_node_data(group_label, code):
                     if output_parameters['sirius_version'] != code_version_2:
                         print('wrong code version 2')
                         sys.exit()
+                if not gk_cutoff:
+                    gk_cutoff = input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF']
+                else:
+                    if input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF'] != gk_cutoff:
+                        print('wrong GK CUTOFF')
+                if not pw_cutoff:
+                    pw_cutoff = input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF']
+                else:
+                    if input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF'] != pw_cutoff:
+                        print('wrong PW CUTOFF')
             else:
                 if not code_version_1:
                     code_version_1 = output_parameters['cp2k_version']
@@ -123,16 +144,21 @@ def collect_node_data(group_label, code):
                     if not a_pp['POTENTIAL'] in pps.values():
                         print('wrong potential')
                         sys.exit()
+            if not xc_functional:
+                xc_functional = input_parameters['FORCE_EVAL']['DFT']['XC']
+            else:
+                if input_parameters['FORCE_EVAL']['DFT']['XC'] != xc_functional:
+                    print('wrong XC functional')
             labels.append(a_node.label)
             cells.append(motion_step['cells'])
             positions.append(motion_step['positions'])
             species.append(motion_step['symbols'])
             energies.append(motion_step['energy_eV'])
             forces.append(np.array(motion_step['forces']))
-    return labels, cells, positions, species, energies, forces, pps, [code_version_1, code_version_2]
+    return labels, cells, positions, species, energies, forces, pps, input_parameters, [code_version_1, code_version_2]
 
 def collect_data(code):
-    labels, cells, positions, species, energies, forces, pps, code_version = collect_node_data('imported_calculation_nodes', code)
+    labels, cells, positions, species, energies, forces, pps, input_parameters, code_version = collect_node_data('imported_calculation_nodes', code)
     min_epa = 0
     training_data = []
     plot_nat_b = []
@@ -181,7 +207,7 @@ def collect_data(code):
                       plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c,
                       plot_force
                       ]
-    return collected_data, pps, code_version
+    return collected_data, pps, input_parameters, code_version
 
 def get_all_distances(training_data, r_c):
     all_distances = []
@@ -297,15 +323,15 @@ def plot_3(training_data):
 
 if __name__ == "__main__":
     try:
-       os.mkdir(os.path.join('.','exported_data'))
+        os.mkdir(os.path.join('.','exported_data'))
     except FileExistsError:
-       print(f'>>> Cannot proceed: {os.path.join(".","exported_data")} exists <<<'+'\n')
-       sys.exit()
-
-    author_data = collect_author_data()
-    inputs = collect_input_data()
-    protocol = collect_protocol()
-    collected_data, pps, code_version = collect_data(inputs['ab_initio_code'])
+        print(f'>>> Cannot proceed: {os.path.join(".","exported_data")} exists <<<'+'\n')
+        sys.exit()
+    author_data = get_author_data()
+    inputs = get_input_data()
+    code = inputs['ab_initio_code']
+    collected_data, pps, input_parameters, code_version = collect_data(code)
+    protocol = get_protocol(input_parameters, code)
     if not code_version[-1]:
         code_version.pop(-1)
     todump = {'Author data': author_data}

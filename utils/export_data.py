@@ -1,10 +1,12 @@
 import os
 import yaml
-from aiida.orm import Dict, Group, load_node #, QueryBuilder, CalcJobNode
+from aiida.orm import Dict, Group, load_node
 from aiida_pyflame.workflows.settings import run_dir, PyFLAME_directory
 from aiida.manage.configuration import load_profile
 
 load_profile()
+
+tmp_group, _ = Group.collection.get_or_create('tmp_group')
 
 pks = []
 with open(os.path.join(run_dir,'input.yaml'), 'r', encoding='utf8') as fhandle:
@@ -64,5 +66,10 @@ known_structures_nodes = []
 for a_node in known_structures_group.nodes:
     known_structures_nodes.append(a_node.pk)
 
-export_nodes = ' '.join(str(x) for x in known_structures_nodes+calculation_nodes+pks)
-os.system('verdi archive create --no-call-calc-backward --no-call-work-backward --no-create-backward exported_calculation_nodes.aiida --nodes  %s' %export_nodes)
+all_nodes_pk = known_structures_nodes+calculation_nodes[1:1000]+pks
+for a_pk in all_nodes_pk:
+    a_node = load_node(a_pk)
+    tmp_group.add_nodes(a_node)
+
+os.system('verdi archive create --no-call-calc-backward --no-call-work-backward --no-create-backward exported_calculation_nodes.aiida --groups tmp_group')
+Group.collection.delete(tmp_group.pk)

@@ -119,7 +119,7 @@ def store_step1_results():
     if epas:
         log_write(f'min_epa: {round(min(epas), 8)}'+'\n')
     else:
-        log_write('>>> Warning: no minimum energy per atom is calculated (epa = 0.0 eV) <<<')
+        log_write('>>> WARNING: no minimum energy per atom is calculated (epa = 0.0 eV) <<<')
         epas = [0.0]
     minmaxepa = [min(epas), max(epas)]
     # store
