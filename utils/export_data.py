@@ -66,7 +66,7 @@ known_structures_nodes = []
 for a_node in known_structures_group.nodes:
     known_structures_nodes.append(a_node.pk)
 
-all_nodes_pk = known_structures_nodes+calculation_nodes[1:1000]+pks
+all_nodes_pk = known_structures_nodes+calculation_nodes+pks
 for a_pk in all_nodes_pk:
     a_node = load_node(a_pk)
     tmp_group.add_nodes(a_node)

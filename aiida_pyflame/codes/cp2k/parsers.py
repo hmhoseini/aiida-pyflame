@@ -127,7 +127,10 @@ def parse_cp2k_output_simple(fstring):
                 # Note: with CELL_OPT/LBFGS there is no "STEP 0", while there is with CELL_OPT/BFGS
                 if re.search(r"Informations at step", line):
                     step = int(data[5])
-                if (len(data) == 1 and data[0] == "---------------------------------------------------"):
+                elif re.search(r"Step number", line):
+                    step = int(data[3])
+#                if (len(data) == 1 and data[0] == "---------------------------------------------------"):
+                if re.search(r"Estimated peak process memory after this step", line):
                     print_now = True
                 if re.search(
                     r"Reevaluating energy at the minimum", line):
