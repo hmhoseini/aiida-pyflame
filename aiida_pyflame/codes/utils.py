@@ -95,10 +95,9 @@ def get_structures_from_mpdb():
         l += len(results)
         structures_eah = []
         for a_result in results:
-            structures_eah.append([a_result.structure.as_dict(), a_result.energy_above_hull])
-            a_structure_primitive = a_result.structure.get_primitive_structure()
-            if len(a_structure_primitive.sites) != len(a_result.structure.sites):
-                structures_eah.append([a_structure_primitive.as_dict(), a_result.energy_above_hull])
+            sga = SpacegroupAnalyzer(a_result.structure)
+            conventional_structure = sga.get_conventional_standard_structure()
+            structures_eah.append([conventional_structure.as_dict(), a_result.energy_above_hull])
         structures_eah.sort(key=lambda x: x[1])
         a_node = Dict({a_composition: structures_eah}).store()
         a_node.label = 'structure_from_mpdb'
@@ -106,11 +105,12 @@ def get_structures_from_mpdb():
     return l
 
 def get_reference_structures(EAH):
-    """ EAH True: return up to 10 structures with EAH < 0.30 eV/atom and nat < 120
+    """ EAH True: return up to 10 structures with EAH < 0.30 eV/atom and nat < 80
         EAE False: retrun structures with allowed nat for ab initio calculations
     """
     composition_list = inputs['Chemical_formula']
     reference_structures = []
+    vpas = []
     known_structures_group = Group.collection.get(label='known_structures')
     for a_node in known_structures_group.nodes:
         if 'structure_from_mpdb' in a_node.label:
@@ -121,38 +121,33 @@ def get_reference_structures(EAH):
                         if a_structure_eah[1] > 0.30:
                             continue
                         pymatgen_structure = Structure.from_dict(a_structure_eah[0])
-                        if len(pymatgen_structure.sites) < 120:
+                        if len(pymatgen_structure.sites) < 80:
                             if is_structure_valid(pymatgen_structure, False, False, True, False, False)[0]:
                                 reference_structures.append(a_structure_eah[0])
+                                vpas.append(pymatgen_structure.volume/len(pymatgen_structure.sites))
                         else:
                             primitive_structure = pymatgen_structure.get_primitive_structure()
                             if len(primitive_structure.sites) != len(pymatgen_structure.sites) and\
-                               len(primitive_structure.sites) < 120 and\
+                               len(primitive_structure.sites) < 80 and\
                                is_structure_valid(primitive_structure, False, False, True, False, False)[0]:
                                 reference_structures.append(primitive_structure.as_dict())
-                    return reference_structures[:10]
+                                vpas.append(primitive_structure.volume/len(primitive_structure.sites))
+                    return reference_structures[:10], vpas
 
                 a_n_a = get_allowed_n_atom_for_compositions(composition_list)
                 for a_structure_eah in tmp_dict[a_key]:
                     pymatgen_structure = Structure.from_dict(a_structure_eah[0])
                     if len(pymatgen_structure.sites) in a_n_a and\
-                       len(pymatgen_structure.sites) < 120 and\
                        is_structure_valid(pymatgen_structure, False, False, True, False, False)[0]:
                         reference_structures.append(a_structure_eah[0])
+                        continue
                     primitive_structure = pymatgen_structure.get_primitive_structure()
                     if len(primitive_structure.sites) in a_n_a and\
                        len(primitive_structure.sites) != len(pymatgen_structure.sites) and\
-                       len(primitive_structure.sites) < 120 and\
                        is_structure_valid(primitive_structure, False, False, True, False, False)[0]:
                         reference_structures.append(primitive_structure.as_dict())
-                    sga = SpacegroupAnalyzer(pymatgen_structure)
-                    conventional_structure = sga.get_conventional_standard_structure()
-                    if len(conventional_structure.sites) in a_n_a and\
-                       len(conventional_structure.sites) != len(pymatgen_structure.sites) and\
-                       len(conventional_structure.sites) < 120 and\
-                       is_structure_valid(conventional_structure, False, False, True, False, False)[0]:
-                        reference_structures.append(conventional_structure.as_dict())
-                return reference_structures
+                        continue
+                return reference_structures, vpas
 
 def get_structures_from_local_db():
     """ Read structures from the local database

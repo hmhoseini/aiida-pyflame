@@ -2,10 +2,8 @@ import sys
 from datetime import datetime
 from time import sleep
 from aiida.orm import Group
-from aiida_pyflame.workflows.core import log_write
+from aiida_pyflame.workflows.core import log_write, report
 from aiida_pyflame.workflows.settings import groups
-from aiida_pyflame.workflows.step3 import store_step3_results
-from aiida_pyflame.workflows.step4 import store_seeds
 from aiida_pyflame.codes.flame.minimahopping import store_minhocao_results, store_minhopp_results
 import aiida_pyflame.workflows.settings as settings
 
@@ -38,10 +36,10 @@ def rerun():
             from aiida_pyflame.codes.cp2k.cp2k_launch_calculations import CP2KSubmissionController
             log_write('Ab-initio calculations with {}'.format(settings.inputs['ab_initio_code'])+'\n')
             controller = CP2KSubmissionController(
-                parent_group_label='structures_step3',
+                parent_group_label='pg_step3',
                 group_label='wf_step3',
                 max_concurrent=settings.job_script['geopt']['number_of_jobs'],
-                GTHorSIRIUS=settings.inputs['ab_initio_code'])
+                QSorSIRIUS=settings.inputs['ab_initio_code'])
         elif settings.inputs['ab_initio_code']=='VASP':
             from aiida_pyflame.codes.vasp.vasp_launch_calculations import VASPSubmissionController
             log_write('Ab-initio calculations with VASP'+'\n')
@@ -58,7 +56,11 @@ def rerun():
                 controller.submit_new_batch(dry_run=False)
             sleep(60)
         # store
-        store_step3_results()
+        total_computing_time, submitted_jobs, finished_job = report('wf_step3')
+        log_write(f'submitted jobs: {submitted_jobs}, succesful jobs: {finished_job}'+'\n')
+        log_write(f'total computing time: {round(total_computing_time, 2)} core-hours'+'\n')
+        log_write('rerun of STEP 3 ended'+'\n')
+        log_write(f'end time: {get_time()}'+'\n')
     elif 'minimahopping' in active_group.label:
         from aiida_pyflame.codes.flame.flame_launch_calculations import MinimaHoppingSubmissionController
         c_no = settings.restart['training_loop_start'][0]
@@ -107,9 +109,10 @@ def rerun():
             if controller.num_to_run > 0:
                 controller.submit_new_batch(dry_run=False)
             sleep(60)
-        # store new seeds
-        store_seeds(cycle_number)
-        log_write('cycle-{}: ab initio single point calculations ended'.format(c_no)+'\n')
-        log_write('end time: {}'.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))+'\n')
+        # report
+        total_computing_time, submitted_jobs, finished_job = report('wf_singlepoint')
+        log_write(f'submitted jobs: {submitted_jobs}, succesful jobs: {finished_job}'+'\n')
+        log_write(f'total computing time: {round(total_computing_time, 2)} core-hours'+'\n')
+        log_write(f'end time: {get_time()}'+'\n')
     else:
         log_write('>>> cannot rerun {} <<<'.format(active_group.label)+'\n')

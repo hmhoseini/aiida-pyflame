@@ -24,7 +24,7 @@ opt1: # cluster
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.2
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675E-6 #1e-4 eV
@@ -64,7 +64,7 @@ opt1: # cluster
       MAX_DR: 0.5
       RMS_DR: 0.5
       BFGS:
-        TRUST_RADIUS: 0.25
+        TRUST_RADIUS: 0.5
 opt1vc: # bulk
   kpoints_distance: 1
   GLOBAL:
@@ -91,7 +91,7 @@ opt1vc: # bulk
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.2
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675E-6 #1e-4 eV
@@ -125,7 +125,7 @@ opt1vc: # bulk
         _: 'OFF'
     CELL_OPT:
       TYPE: DIRECT_CELL_OPT
-      EXTERNAL_PRESSURE: 200 #bar
+      EXTERNAL_PRESSURE: 0
       PRESSURE_TOLERANCE: 200
       OPTIMIZER: BFGS
       MAX_ITER:  200
@@ -134,7 +134,7 @@ opt1vc: # bulk
       MAX_DR: 0.5
       RMS_DR: 0.5
       BFGS:
-        TRUST_RADIUS: 0.25
+        TRUST_RADIUS: 0.5
 bulk: # reference 
   kpoints_distance: 0.4
   GLOBAL:
@@ -161,7 +161,7 @@ bulk: # reference
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.2
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675E-8 # 1e-6
@@ -204,7 +204,7 @@ bulk: # reference
       MAX_DR: 0.0050
       RMS_DR: 0.0050
       BFGS:
-        TRUST_RADIUS: 0.25
+        TRUST_RADIUS: 0.5
 single_point: # bulk/cluster
   kpoints_distance: 0.4
   GLOBAL:
@@ -236,7 +236,7 @@ single_point: # bulk/cluster
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.2
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675E-8 # 1e-6
@@ -277,7 +277,7 @@ dimer:
       MIXER:
         TYPE: ANDERSON
         USE_HARTREE: True
-        BETA: 0.2
+        BETA: 0.5
       ITERATIVE_SOLVER:
         SUBSPACE_SIZE: 2
         MIN_TOLERANCE: 3.675E-6  #1e-4
@@ -318,4 +318,4 @@ dimer:
       MAX_DR: 0.5
       RMS_DR: 0.5
       BFGS:
-        TRUST_RADIUS: 0.25
+        TRUST_RADIUS: 0.5

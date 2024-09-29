@@ -302,6 +302,8 @@ def read_training_data_from_node(group_label):
         max_tot_force = max(tot_force)
         if max_tot_force > settings.inputs['max_force']:
             continue
+#        if is_cluster and epa < min_epa:
+#            continue
         min_epa = min(min_epa, epa)
         this_min_epa = min(this_min_epa, epa)
         if epa < min_epa + e_window and\
@@ -326,7 +328,7 @@ def read_training_data_from_node(group_label):
             continue
 
         fmax = settings.inputs['max_force']
-        fmin = 0.1
+        fmin = 0.01
         steps = int((fmax -fmin) * 10)
         maxmin_force = [[fmin + s*(fmax-fmin)/steps , fmin+(s+1)*(fmax-fmin)/steps] for s in range(steps)]
         found = len(maxmin_force) * [False]

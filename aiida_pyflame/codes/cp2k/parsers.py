@@ -129,8 +129,8 @@ def parse_cp2k_output_simple(fstring):
                     step = int(data[5])
                 elif re.search(r"Step number", line):
                     step = int(data[3])
-#                if (len(data) == 1 and data[0] == "---------------------------------------------------"):
-                if re.search(r"Estimated peak process memory after this step", line):
+                if (len(data) == 1 and data[0] == "---------------------------------------------------") or\
+                   re.search(r"Estimated peak process memory after this step", line):
                     print_now = True
                 if re.search(
                     r"Reevaluating energy at the minimum", line):
@@ -218,7 +218,7 @@ def read_cell_parameters(content):
         cell_c = line.split()[8:11]
         cell_parameters.append(np.array([cell_a, cell_b, cell_c], np.float64))
     return cell_parameters
- 
+
 def read_lattice_parameters(content):
     bohr2ang = 0.529177208590000
     match = re.search(r"\n\s*&CELL\n(.*?)\n\s*&END CELL\n", content, re.DOTALL)

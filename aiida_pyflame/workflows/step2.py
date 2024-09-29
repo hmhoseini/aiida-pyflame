@@ -1,7 +1,12 @@
 import sys
 import yaml
+import numpy as np
 from time import sleep
 from collections import defaultdict
+from random import randint, uniform
+from pyxtal.crystal import random_crystal
+from pymatgen.core.composition import Composition
+from pymatgen.core.structure import Structure
 from aiida.orm import Group, Dict
 from aiida_pyflame.codes.utils import get_allowed_n_atom_for_compositions, get_time, store_calculation_nodes
 from aiida_pyflame.codes.flame.flame_launch_calculations import GenSymCrysSubmissionController
@@ -9,6 +14,10 @@ from aiida_pyflame.workflows.core import log_write, previous_run_exist_check, gr
 from aiida_pyflame.workflows.settings import inputs, job_script, steps_status
 from aiida_pyflame.codes.utils import is_structure_valid
 from aiida_pyflame.codes.flame.core import conf2pymatgenstructure
+
+class random_crystal_3d(random_crystal):
+    def set_volume(self):
+        self.volume = self.factor
 
 def collect_random_structures(outfile):
     random_bulk_structures = []
@@ -43,21 +52,64 @@ def store_step2_results():
         random_structures_group.add_nodes(a_node)
         log_write(f'{len(todump_dict[a_key])} random bulk structures with {a_key} atoms are generated'+'\n')
 
-def step_2():
-    """ Step 2
-    """    
-    log_write("---------------------------------------------------------------------------------------------------"+'\n')
-    log_write('STEP 2'+'\n')
-    log_write(f'start time: {get_time()}'+'\n')
-    log_write('random structure generation with gensymcrys'+'\n')
-    # check
-    previous_run_exist_check()
-    group_is_empty_check('wf_step2')
+def generate_random_bulk(ini_spg, elements, n_element, vpas, n):
+    min_d_prefactor = min(0.90, inputs['min_distance_prefactor'])
+    random_structures = []
+    failed_attempts = 0
+    spg = ini_spg
+    while len(random_structures) < n:
+        vol = uniform(min(vpas), max(vpas)) * sum(n_element)
+        try:
+            r_b_3d = random_crystal_3d(3, spg, elements, n_element, vol)
+        except:
+            spg = randint(1, 230)
+            continue
+        lattice = r_b_3d.lattice.matrix
+        coords = None
+        species = []
+        try:
+            for site in r_b_3d.atom_sites:
+                species.extend([site.specie] * site.multiplicity)
+                coords = site.coords if coords is None else np.append(coords, site.coords, axis=0)
+        except:
+            spg = randint(1, 230)
+            continue
+        pymatgen_structure = Structure(lattice, species, coords)
+        if is_structure_valid(pymatgen_structure, False, min_d_prefactor, True, False, False)[0]:
+            random_structures.append(pymatgen_structure)
+            failed_attempts = 0
+            spg = ini_spg
+            print(pymatgen_structure)
+        else:
+            failed_attempts = failed_attempts + 1
+        if failed_attempts > 5:
+            spg = randint(1, 230)
+    return random_structures
 
-    composition_list = inputs['Chemical_formula']
-    if len(composition_list) ==  0:
-        log_write('>>> ERROR: no composition is provided <<<'+'\n')
-        sys.exit()
+def step2_pyxtal(composition_list):
+    todump_dict = defaultdict(list)
+    vpas = []
+    known_structures_group = Group.collection.get(label='known_structures')
+    for a_node in known_structures_group.nodes:
+        if 'vpas' in a_node.label:
+            vpas = a_node.get_list()
+    for a_comp in composition_list:
+        allowed_n_atom = get_allowed_n_atom_for_compositions([a_comp])
+        attempts = max(round(2*(inputs['number_of_bulk_structures']/len(inputs['bulk_number_of_atoms']))/230), 1)
+        elements = []
+        n_elmnt = []
+        for e, n in Composition(a_comp).items():
+            elements.append(str(e))
+            n_elmnt.append(int(n))
+        for a_n_a in allowed_n_atom:
+            random_bulk_structures = []
+            n_element = [n_el*int(a_n_a/sum(n_elmnt)) for n_el in n_elmnt]
+            for spg in range(1, 231):
+                random_bulk_structures.append(generate_random_bulk(spg, elements, n_element, vpas, attempts))
+            todump_dict[str(a_n_a)].extend(random_bulk_structures)
+    return todump_dict
+
+def step2_flame(composition_list):
     data_dict = {}
     for a_comp in composition_list:
         allowed_n_atom = get_allowed_n_atom_for_compositions([a_comp])
@@ -75,6 +127,29 @@ def step_2():
         sleep(60)
     # store resutls
     store_step2_results()
+
+def step_2():
+    """ Step 2
+    """    
+    log_write("---------------------------------------------------------------------------------------------------"+'\n')
+    log_write('STEP 2'+'\n')
+    log_write(f'start time: {get_time()}'+'\n')
+    log_write('random structure generation with gensymcrys'+'\n')
+    # check
+    previous_run_exist_check()
+    group_is_empty_check('wf_step2')
+
+    composition_list = inputs['Chemical_formula']
+    if len(composition_list) ==  0:
+        log_write('>>> ERROR: no composition is provided <<<'+'\n')
+        sys.exit()
+    if len(inputs['bulk_number_of_atoms']) < 1 or not inputs['number_of_bulk_structures']:
+        log_write('>>> ERROR: data for step 2 is not complete'+'\n')
+        sys.exit()
+    if inputs['random_structure_generator'] in ['PyXtal', 'pyxtal']:
+        step2_pyxtal(composition_list)
+    else:
+        step2_flame(composition_list)
     log_write('STEP 2 ended'+'\n')
     log_write(f'end time: {get_time()}'+'\n')
     if not steps_status[2]:

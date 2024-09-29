@@ -7,11 +7,11 @@ from pymatgen.core.structure import Structure, Molecule
 from pymatgen.core.composition import Composition
 from aiida.orm import Group, List, Dict, load_node, QueryBuilder, WorkChainNode, CalcJobNode
 from aiida.plugins import DataFactory
-from aiida_pyflame.codes.utils import get_element_list, get_structures_from_mpdb, get_reference_structures, get_time, store_calculation_nodes 
+from aiida_pyflame.codes.utils import get_element_list, get_structures_from_mpdb, get_reference_structures, get_time, store_calculation_nodes
 from aiida_pyflame.workflows.core import log_write, previous_run_exist_check, report
 from aiida_pyflame.workflows.settings import inputs, output_dir, groups, steps_status, job_script
 
-def store_step1_results():
+def store_step1_results(vpas_db):
     """ Store results
     """
     known_structures_group = Group.collection.get(label='known_structures')
@@ -32,7 +32,6 @@ def store_step1_results():
     dimers = {}
     epas = []
     minmaxepa = []
-    vpas_db = []
     vpas_dimer = []
     calculation_nodes = []
     covalent_radius = CovalentRadius.radius
@@ -44,14 +43,26 @@ def store_step1_results():
         if 'VASP' in inputs['ab_initio_code']:
             if not a_node.outputs.misc.dict.run_status['electronic_converged']:
                 continue
-            pymatgen_structure = a_node.outputs.structure.get_pymatgen()
+            coords = []
+            species = []
+            lattice = a_node.outputs.structure.cell
+            for a_site in a_node.outputs.structure.sites:
+                species.append(a_site.kind_name)
+                coords.append(a_site.position)
+            pymatgen_structure = Structure(lattice, species, coords, to_unit_cell=True, coords_are_cartesian=True)
             epot = float(a_node.outputs.energies.get_array('energy_extrapolated_electronic')[-1])
         if 'SIRIUS' in inputs['ab_initio_code'] or 'QS' in inputs['ab_initio_code']:
             output_parameters = a_node.base.links.get_outgoing(link_label_filter='output_parameters').all_nodes()[0]
             motion_step = output_parameters['motion_step_info']
             if not motion_step['scf_converged']:
                 continue
-            pymatgen_structure = a_node.outputs.output_structure.get_pymatgen()
+            coords = []
+            species = []
+            lattice = a_node.outputs.output_structure.cell
+            for a_site in a_node.outputs.output_structure.sites:
+                species.append(a_site.kind_name)
+                coords.append(a_site.position)
+            pymatgen_structure = Structure(lattice, species, coords, to_unit_cell=True, coords_are_cartesian=True)
             epot = float(a_node.outputs.output_parameters.dict.energy)
         if 'dimer' in a_node.label:
             labels = pymatgen_structure.labels
@@ -67,7 +78,6 @@ def store_step1_results():
             continue
         nat = len(pymatgen_structure.sites)
         epas.append(epot/nat)
-        vpas_db.append(pymatgen_structure.volume/nat)
         calculation_nodes.append(a_node.pk)
     # dimers
     for a_combination in combinations_with_replacement(element_list, 2):
@@ -77,12 +87,12 @@ def store_step1_results():
         else:
             d = covalent_radius[a_combination[0]] + covalent_radius[a_combination[-1]]
             if a_combination[0] == a_combination[-1]:
-                dimers[a_dimer] = d
+                dimers[a_dimer] = 0.85 * d
                 dimers[a_combination[0]] = d/2
             else:
-                dimers[a_dimer] = 0.75 * d
+                dimers[a_dimer] = 0.85 * d
                 a_r_dimer = '-'.join(list(reversed(a_combination)))
-                dimers[a_r_dimer] = 0.75 * d
+                dimers[a_r_dimer] = 0.85 * d
             log_write(f'{a_dimer}: {round(dimers[a_dimer], 2)} A (calculated from covalent radii)'+ '\n')
     # vpas_db
     if vpas_db:
@@ -91,26 +101,26 @@ def store_step1_results():
         else:
             log_write(f'vpa calculated from database: {round(vpas_db[0], 2)} A^3/atom'+'\n')
     # vpas_dimer
-    c1= 27.5143396016886; c2= -15.1276388491108; c3= 2.73176264584233; a1= 1.62251902284598; a2= 3.06984018288488; a3= 4.79934235307803
-    for a_composition in composition_list:
-        elements = []
-        nelement = []
-        for elmnt, nelmnt in Composition(a_composition).items():
-            elements.append(str(elmnt))
-            nelement.append(int(nelmnt))
-        vol = 0
-        for i in range(len(elements)):
-            vol += (c1 * dimers[elements[i]]**a1 + c2 * dimers[elements[i]]**a2 + c3 * dimers[elements[i]]**a3) * nelement[i]
-        vpas_dimer.append(vol/sum(nelement))
-    if round(max(vpas_dimer), 2) != round(min(vpas_dimer), 2):
-        log_write(f'min. and max. vpas calculated from dimers: {round(min(vpas_dimer), 2)} and {round(max(vpas_dimer), 2)} A^3/atom'+'\n')
-    else:
-        log_write(f'vpa calculated from dimers: {round(vpas_dimer[0], 2)} A^3/atom'+'\n')
-    # more vpas
-    if len(vpas_db) < 6:
+    if len(vpas_db) < 3:
+        c1= 27.5143396016886; c2= -15.1276388491108; c3= 2.73176264584233; a1= 1.62251902284598; a2= 3.06984018288488; a3= 4.79934235307803
+        for a_composition in composition_list:
+            elements = []
+            nelement = []
+            for elmnt, nelmnt in Composition(a_composition).items():
+                elements.append(str(elmnt))
+                nelement.append(int(nelmnt))
+            vol = 0
+            for i in range(len(elements)):
+                vol += (c1 * dimers[elements[i]]**a1 + c2 * dimers[elements[i]]**a2 + c3 * dimers[elements[i]]**a3) * nelement[i]
+            vpas_dimer.append(vol/sum(nelement))
+        if round(max(vpas_dimer), 2) != round(min(vpas_dimer), 2):
+            log_write(f'min. and max. vpas calculated from dimers: {round(min(vpas_dimer), 2)} and {round(max(vpas_dimer), 2)} A^3/atom'+'\n')
+        else:
+            log_write(f'vpa calculated from dimers: {round(vpas_dimer[0], 2)} A^3/atom'+'\n')
         vpas = vpas_db + vpas_dimer
     else:
         vpas = vpas_db
+    # more vpas
     vpas.append(max(vpas)*1.05)
     vpas.append(min(vpas)*0.75)
     minmaxvpa = [min(vpas), max(vpas)]
@@ -119,7 +129,7 @@ def store_step1_results():
     if epas:
         log_write(f'min_epa: {round(min(epas), 8)}'+'\n')
     else:
-        log_write('>>> WARNING: no minimum energy per atom is calculated (epa = 0.0 eV) <<<')
+        log_write('>>> WARNING: no minimum energy per atom is calculated (epa = 0.0 eV) <<<'+'\n')
         epas = [0.0]
     minmaxepa = [min(epas), max(epas)]
     # store
@@ -190,15 +200,15 @@ def step_1():
     else:
         log_write(f'Number of atomic structures from the MPD: {l}'+'\n')
     # Reference structures
-    reference_structures = get_reference_structures(True)
+    reference_structures, vpas_db = get_reference_structures(True)
     if reference_structures:
         log_write(f'Number of reference atomic structures from the MPD: {len(reference_structures)}'+'\n')
     else:
         log_write('>>> WARNING: no reference bulk structure was found in the MPD <<<'+'\n')
-    # add structures to the parent group
-    add_structures_to_parent_group(reference_structures)
     # submit jobs
     if 'SIRIUS' in inputs['ab_initio_code'] or 'QS' in inputs['ab_initio_code']:
+        # add structures to the parent group
+        add_structures_to_parent_group([])
         from aiida_pyflame.codes.cp2k.cp2k_launch_calculations import CP2KSubmissionController
         log_write(f'Reference calculations with {inputs["ab_initio_code"]}'+'\n')
         controller = CP2KSubmissionController(
@@ -207,6 +217,8 @@ def step_1():
             max_concurrent=job_script['geopt']['number_of_jobs'],
             QSorSIRIUS=inputs['ab_initio_code'])
     elif inputs['ab_initio_code']=='VASP':
+        # add structures to the parent group
+        add_structures_to_parent_group(reference_structures)
         from aiida_pyflame.codes.vasp.vasp_launch_calculations import VASPSubmissionController
         log_write('Reference calculations with VASP'+'\n')
         controller = VASPSubmissionController(
@@ -226,7 +238,7 @@ def step_1():
     log_write(f'submitted jobs: {submitted_jobs}, succesful jobs: {finished_job}'+'\n')
     log_write(f'total computing time: {round(total_computing_time, 2)} core-hours'+'\n')
     # store step1 resutls
-    store_step1_results()
+    store_step1_results(vpas_db)
     log_write('STEP 1 ended'+'\n')
     log_write(f'end time: {get_time()}'+'\n')
     if not steps_status[1]:

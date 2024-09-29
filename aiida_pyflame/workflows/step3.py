@@ -30,7 +30,7 @@ def read_structures():
         if int(a_node.label) in allowed_n_atom_bulk:
             random_bulk_structures_dict[int(a_node.label)] = a_node.get_dict()[a_node.label]
     # get reference structures, if any
-    reference_structures = get_reference_structures(EAH=False)
+    reference_structures, _ = get_reference_structures(EAH=False)
     # from local db
     bulk_structures, molecule_structures = get_structures_from_local_db()
     if bulk_structures:
@@ -62,7 +62,7 @@ def add_structures_to_parent_group():
             indices_schm1_geopt = sample(indices, n_struct_schm1_geopt)
         else:
             log_write(f'>>> WARNING: not enough structures with {str(a_key)} atoms for optimization with scheme 1 <<<'+'\n')
-            indices_schm1_geopt = indices
+            sys.exit()
 
         for rem in indices_schm1_geopt:
             indices.remove(rem)
@@ -71,7 +71,7 @@ def add_structures_to_parent_group():
             indices_schm2_geopt = sample(indices, n_struct_schm2_geopt)
         else:
             log_write(f' >>> WARNING: not enough structures with {str(a_key)} atoms for optimization with scheme 2 <<<'+'\n')
-            indices_schm2_geopt = indices
+            sys.exit()
 
         for rem in indices_schm2_geopt:
             indices.remove(rem)

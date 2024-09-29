@@ -5,7 +5,7 @@ from aiida.plugins import DataFactory
 from aiida.manage.configuration import load_profile
 
 load_profile()
-StructureData = DataFactory("structure")
+StructureData = DataFactory("core.structure")
 
 def read_files(path):
     bulks = []

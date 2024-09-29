@@ -86,8 +86,7 @@ def get_kinds_section_SIRIUS(structure, basis_pseudo, magnetization_tags=None):
     return {'FORCE_EVAL': {'SUBSYS': {'KIND': kinds}}}
 
 def get_cutoff_SIRIUS(structure, basis_pseudo):
-    pw_cutoff = 0
-    gk_cutoff = 0
+    gk_cutoff = 6
     with open(os.path.join(settings.CP2K_input_files_path, basis_pseudo), 'rb') as fhandle:
         atom_data = json.loads(fhandle.read())
     ase_structure = structure.get_ase()
@@ -95,8 +94,9 @@ def get_cutoff_SIRIUS(structure, basis_pseudo):
     (symbol, str(tag)) for symbol, tag in zip(ase_structure.get_chemical_symbols(), ase_structure.get_tags())
     }
     for symbol, tag in symbol_tag:
-        pw_cutoff = max(pw_cutoff, round((atom_data[symbol]['cutoff_rho'])**0.5))
-        gk_cutoff = max(gk_cutoff, round((atom_data[symbol]['cutoff_wfc'])**0.5))
+        gk_cutoff = max(gk_cutoff, round(0.5 + (atom_data[symbol]['cutoff_wfc'])**0.5))
+        pw_cutoff = max(2.5 * gk_cutoff, round((atom_data[symbol]['cutoff_rho'])**0.5))
+
     return pw_cutoff, gk_cutoff
 
 def get_file_section_QS():
@@ -161,6 +161,7 @@ def construct_builder(structure, parameters, basis_pseudo, QSorSIRIUS):
         if mesh != [1, 1, 1]:
             parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['NGRIDK'] = f'{mesh[0]} {mesh[1]} {mesh[2]}'
         else:
+            pass
             parameters['FORCE_EVAL']['PW_DFT']['CONTROL']['MPI_GRID_DIMS'] = f'{1} {settings.job_script["geopt"]["ntasks"]}'
         cell = parameters['FORCE_EVAL']['SUBSYS']['CELL']
         for i, keys in enumerate(cell.keys()):
@@ -362,7 +363,7 @@ class Scheme1GeOptWorkChain(WorkChain):
 
     def run_single_point_2(self):
         structure = self.ctx['opt1vc'].outputs['output_structure']
-        scaled_structure = get_scaled_structure(uniform(0.65,0.85), structure)
+        scaled_structure = get_scaled_structure(uniform(0.75,0.95), structure)
         QSorSIRIUS = self.inputs.QSorSIRIUS.value
         # parameters
         basis_pseudo = self.ctx.protocol['basis_pseudo']

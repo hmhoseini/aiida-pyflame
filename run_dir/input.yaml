@@ -10,6 +10,11 @@ cluster_calculation: True
 cluster_number_of_atoms: [] # number of atoms (nat) for clusters (list).
 vacuum_length: 5 # vacuum length for ab-initio cluster calculations (Angstrom)
 
+# random structures generator (FLAME, PyXtal)
+random_structure_generator: FLAME
+# to control the minimum distance between atoms in initial random structures
+min_distance_prefactor: 0.90 # default value is 90%. That is, 0.90 * the distance between dimer atoms or 0.90 * (0.85 * sum of the covalent radii))
+
 # data from local databases. Atomic structures will be retrieved from run_dir/local_db/bulk_structures.json and/or molecule_structures.json (a list of dict representation pymatgen Structure)
 from_local_db: False 
 check_number_of_atoms: False # if nat should be the same as bulk_number_of_atoms
@@ -25,10 +30,10 @@ number_of_epoch: [11, 11, 11, 11] # number of epochs
 # minima hopping (MH) parameters
 minimahopping_time: [12.0, 24.0] # minmum and maximum hours for each minhocao calculation
 # minima hopping with variable cell
-minhocao_steps: [5, 50, 50]
+minhocao_steps: [3, 50, 50]
 bulk_minhocao: [500, 500, 500] # maximum number of structures for minhocao calculations
 # minima hopping with fixed cell (bulk and cluster)
-minhopp_steps: [5, 50, 50]
+minhopp_steps: [3, 50, 50]
 bulk_minhopp: [500, 500, 500] # maximum number of structures for bulk minhopp calculations
 cluster_minhopp: [500, 500, 500] # maximum number of structures for cluster minhopp calculations
 
@@ -39,11 +44,7 @@ dtol_prefactor: 0.03 # the larger the value is, the more structures are consider
 prefactor_cluster: 1.01 
 
 # ab-initio code (SIRIUS_CP2K, VASP, CP2K_QS)
-ab_initio_code: VASP
+ab_initio_code:
 user_specified_CP2K_files: False #  if True, then copy codes/cp2k/cp2k_files into your run directory
 user_specified_FLAME_files: False # if True, then copy codes/flame/flame_files into your run directory
 user_specified_VASP_files: False #  if True, then copy codes/vasp/vasp_files into your run directory
-
-# cleaning local/remote folders
-clean_remote_folders: False
-clean_local_folders: False

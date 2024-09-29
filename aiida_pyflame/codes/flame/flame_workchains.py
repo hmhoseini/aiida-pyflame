@@ -116,8 +116,9 @@ class GenSymCrysWorkChain(WorkChain):
             if 'dimers' in a_node.label:
                 dimers = a_node.get_dict()
         pairs = {}
+        min_d_prefactor = min(0.90, settings.inputs['min_distance_prefactor'])
         for a_pair in combinations_with_replacement(elements,2):
-            pairs[''.join(a_pair)] = dimers['-'.join(a_pair)] * 0.90
+            pairs[''.join(a_pair)] = dimers['-'.join(a_pair)] * min_d_prefactor
 
         additional_parameters = {}
         additional_parameters['main'] = {}

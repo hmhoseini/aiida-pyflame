@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
+
 import os
 import sys
+import argparse
+
 from collections import defaultdict
 import numpy as np
-import yaml
 import json
+import gzip
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from pymatgen.core.structure import Structure
@@ -26,6 +30,9 @@ def get_input_data(group_label='imported_calculation_nodes'):
     builder.append(Node, with_group='group', filters={'label': 'inputs'}, project='id')
     pk = builder.all(flat=True)[0]
     inputs = load_node(pk).get_dict()
+    if len(inputs['Chemical_formula']) > 1:
+        print('More than one chemical formula')
+        sys.exit()
     return inputs
 
 def get_protocol(input_parameters, code, group_label='imported_calculation_nodes'):
@@ -67,7 +74,7 @@ def collect_node_data(group_label, code):
                 continue
             if not 'VaspCalculation' in a_node.process_label:
                 print('wrong code label')
-                sys.exit()
+                sys.exit(-30)
             input_parameters = a_node.inputs.parameters
 
             if not code_version_1:
@@ -75,7 +82,7 @@ def collect_node_data(group_label, code):
             else:
                 if a_node.outputs.misc.get('version') != code_version_1:
                     print('wrong code version')
-                    sys.exit()
+                    sys.exit(-31)
             if not pps:
                 for a_key in a_node.inputs.potential.keys():
                     pps.update({a_key: f"{a_node.inputs.potential[a_key].base.attributes.get('title')} {a_node.inputs.potential[a_key].base.attributes.get('sha512')}"})
@@ -83,7 +90,7 @@ def collect_node_data(group_label, code):
                 for a_key in a_node.inputs.potential.keys():
                     if not f"{a_node.inputs.potential[a_key].base.attributes.get('title')} {a_node.inputs.potential[a_key].base.attributes.get('sha512')}" in pps.values():
                         print('wrong potential')
-                        sys.exit()
+                        sys.exit(-32)
             labels.append(a_node.label)
             trajectory_node = a_node.base.links.get_outgoing(link_label_filter='trajectory').all_nodes()[0]
             cells.append(trajectory_node.get_array('cells'))
@@ -103,7 +110,7 @@ def collect_node_data(group_label, code):
                 continue
             if 'Cp2kCalculation' not in a_node.process_label:
                 print('wrong code label')
-                sys.exit()
+                sys.exit(-33)
             input_parameters = a_node.inputs.parameters
 
             if output_parameters['SIRIUS']:
@@ -112,30 +119,36 @@ def collect_node_data(group_label, code):
                 else:
                     if output_parameters['cp2k_version'] != code_version_1:
                         print('wrong code version 1')
-                        sys.exit()
+                        sys.exit(-34)
                 if not code_version_2:
                     code_version_2 = output_parameters['sirius_version']
                 else:
                     if output_parameters['sirius_version'] != code_version_2:
                         print('wrong code version 2')
-                        sys.exit()
+                        sys.exit(-35)
+                print(input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF'])
+                print(a_node.label)
                 if not gk_cutoff:
                     gk_cutoff = input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF']
                 else:
                     if input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF'] != gk_cutoff:
+                        print(input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['GK_CUTOFF'])
+                        print(gk_cutoff)
                         print('wrong GK CUTOFF')
+#                        sys.exit(-36)
                 if not pw_cutoff:
                     pw_cutoff = input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF']
                 else:
                     if input_parameters['FORCE_EVAL']['PW_DFT']['PARAMETERS']['PW_CUTOFF'] != pw_cutoff:
                         print('wrong PW CUTOFF')
+                        sys.exit(-37)
             else:
                 if not code_version_1:
                     code_version_1 = output_parameters['cp2k_version']
                 else:
                     if output_parameters['cp2k_version'] != code_version_1:
                         print('wrong code version')
-                        sys.exit()
+                        sys.exit(-38)
             if not pps:
                 for a_pp in a_node.inputs.parameters.dict.FORCE_EVAL['SUBSYS']['KIND']:
                     pps.update({a_pp['_']: a_pp['POTENTIAL']})
@@ -143,7 +156,7 @@ def collect_node_data(group_label, code):
                 for a_pp in a_node.inputs.parameters.dict.FORCE_EVAL['SUBSYS']['KIND']:
                     if not a_pp['POTENTIAL'] in pps.values():
                         print('wrong potential')
-                        sys.exit()
+                        sys.exit(-39)
             if not xc_functional:
                 xc_functional = input_parameters['FORCE_EVAL']['DFT']['XC']
             else:
@@ -155,7 +168,8 @@ def collect_node_data(group_label, code):
             species.append(motion_step['symbols'])
             energies.append(motion_step['energy_eV'])
             forces.append(np.array(motion_step['forces']))
-    return labels, cells, positions, species, energies, forces, pps, input_parameters, [code_version_1, code_version_2]
+    code_version = [code_version_1, code_version_2] if code_version_2 else [code_version_1]
+    return labels, cells, positions, species, energies, forces, pps, input_parameters, code_version
 
 def collect_data(code):
     labels, cells, positions, species, energies, forces, pps, input_parameters, code_version = collect_node_data('imported_calculation_nodes', code)
@@ -233,14 +247,14 @@ def value_to_step(val, intervals):
             return round(sum(interval)/len(interval), 2)
     return 0
 
-def plot_1(plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c, min_epa):
+def plot_1(plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c, min_epa, dirname="."):
     if plot_nat_b and plot_epa_b:
         plt.figure()
         plt.scatter(plot_nat_b,plot_epa_b, label='epa-vs-nat')
         plt.xlabel('nat')
         plt.ylabel(r'epa ($eV/atom$)')
         plt.plot([min(plot_nat_b), max(plot_nat_b)], [min_epa, min_epa])
-        plt.savefig(os.path.join('.','exported_data','bulk_epa-vs-nat.png'))
+        plt.savefig(os.path.join(dirname, 'bulk_epa-vs-nat.png'))
         plt.close()
 
     if plot_epa_b and plot_vpa_b:
@@ -249,7 +263,7 @@ def plot_1(plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c, min_epa):
         plt.xlabel(r'vpa (${\AA}^3/atom$)')
         plt.ylabel(r'epa ($eV/atom$)')
         plt.plot([min(plot_vpa_b), max(plot_vpa_b)], [min_epa, min_epa], color='navy')
-        plt.savefig(os.path.join('.','exported_data','bulk_epa-vs-vpa.png'))
+        plt.savefig(os.path.join(dirname, 'bulk_epa-vs-vpa.png'))
         plt.close()
 
     if plot_nat_c and plot_epa_c:
@@ -258,10 +272,10 @@ def plot_1(plot_nat_b, plot_epa_b, plot_vpa_b, plot_nat_c, plot_epa_c, min_epa):
         plt.xlabel('nat')
         plt.ylabel(r'epa ($eV/atom$)')
         plt.plot([min(plot_nat_c), max(plot_nat_c)], [min_epa, min_epa], color='navy')
-        plt.savefig(os.path.join('.','exported_data','cluster_epa-vs-nat.png'))
+        plt.savefig(os.path.join(dirname, 'cluster_epa-vs-nat.png'))
         plt.close()
 
-def plot_2(forces):
+def plot_2(forces, dirname="."):
     fmin = 0 #min(forces)
     fmax = max(forces)
     steps = int((fmax - fmin) * 10)
@@ -287,10 +301,10 @@ def plot_2(forces):
     ax.bar(plot_i, plot_b, width = 0.05)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
     plt.xlabel(r'force ($meV/\AA$)')
-    plt.savefig(os.path.join('.','exported_data','forces.png'))
+    plt.savefig(os.path.join(dirname, 'forces.png'))
     plt.close()
 
-def plot_3(training_data):
+def plot_3(training_data, dirname="."):
     all_distances = get_all_distances(training_data, 5)
     dmin = 0 #min(all_distances)
     dmax = 5
@@ -318,25 +332,72 @@ def plot_3(training_data):
     plt.xticks(plot_i, plot_d)
     plt.xticks(rotation='vertical')
     plt.xlabel(r'($\AA$)')
-    plt.savefig(os.path.join('.','exported_data','bonds.png'))
+    plt.savefig(os.path.join(dirname, 'bonds.png'))
     plt.close()
 
 if __name__ == "__main__":
-    try:
-        os.mkdir(os.path.join('.','exported_data'))
-    except FileExistsError:
-        print(f'>>> Cannot proceed: {os.path.join(".","exported_data")} exists <<<'+'\n')
-        sys.exit()
+
+    parser = argparse.ArgumentParser(
+                    prog='extract_metadata.py',
+                    description='Extract metadata and training files from AiiDA data files',
+                    epilog='Specific script for this datalad repository, ask a.knuepfer@hzdr.de')
+
+    parser.add_argument('filename', help='Input filename *.aiida')
+    parser.add_argument('-r', '--replace', action='store_true', help='Replace output file DATASET.json if it already exists')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Verbose mode')
+
+    args = parser.parse_args()
+
+    dirname, basename= os.path.split(args.filename)
+    startname, extension= os.path.splitext(basename)
+
+    if ".aiida" != extension:
+        print(f"Illegal AiiDA archive file {args.filename} not ending in .aiida, abort")
+        sys.exit(-1)
+
+    if not os.path.isfile(args.filename):
+        print(f"AiiDA archive file {args.filename} doesn't exist, abort")
+        sys.exit(-2)
+
+    outputfilename= os.path.join(dirname,'DATASET.json')
+    if os.path.isfile(outputfilename):
+        if not args.replace:
+            print(f"Output file for metadata {outputfilename} already present, abort")
+            sys.exit(-3)
+
+    trainingdatafilename= os.path.join(dirname, 'training_data.json.gz')
+    if os.path.isfile(trainingdatafilename):
+        if not args.replace:
+            print(f"Output file for trainig data {trainingdatafilename} already present, abort")
+            sys.exit(-4)
+
+
+    # CHECK
+    # need to clear Verdi database, then make Verdi read in the *.aiida file so 
+    # that its contents can be read via QueryBuilder() from 
+    # group 'imported_calculation_nodes'
+
+    # TODO check if this can also be done with Verdi API calls instead of 
+    # shell commands
+
+    # create or clear "imported_calculation_nodes" group    
+    group, _ = Group.collection.get_or_create('imported_calculation_nodes')
+    group.clear()
+    # import archive file
+    if args.verbose:
+        print(f"os.system(\"verdi archive import -G imported_calculation_nodes {args.filename}\"")
+    os.system(f"verdi archive import -G imported_calculation_nodes {args.filename}")
+
     author_data = get_author_data()
     inputs = get_input_data()
     code = inputs['ab_initio_code']
     collected_data, pps, input_parameters, code_version = collect_data(code)
     protocol = get_protocol(input_parameters, code)
-    if not code_version[-1]:
-        code_version.pop(-1)
+#    if not code_version[-1]:
+#        code_version.pop(-1)
     todump = {'Author data': author_data}
     todump.update(
-            {'Chemical formula': inputs['Chemical_formula'],
+            {'Chemical formula': inputs['Chemical_formula'][0],
              'number of data': len(collected_data[0]),
              'number of bulks': len(collected_data[2]),
              'number of clusters': len(collected_data[5]),
@@ -347,11 +408,13 @@ if __name__ == "__main__":
             }
     )
     # store
-    with open(os.path.join('.','exported_data','metadata.yaml'), 'w', encoding='utf-8') as fhandle:
-        yaml.dump(todump, fhandle, default_flow_style=False, sort_keys=False, allow_unicode=True)
-    with open(os.path.join('.','exported_data','training_data.json'), 'w', encoding='utf8') as fhandle:
-        json.dump(collected_data[0], fhandle)
+    with open(outputfilename, 'w', encoding='utf-8') as outfile:
+        json.dump(todump, outfile, indent=4)
+    with gzip.open(trainingdatafilename, 'wt', encoding='UTF-8') as outfilezip:
+        json.dump(collected_data[0], outfilezip) 
+
     # plots
-    plot_1(collected_data[2], collected_data[3], collected_data[4], collected_data[5], collected_data[6], collected_data[1])
-    plot_2(collected_data[7])
-    plot_3(collected_data[0])
+    plot_1(collected_data[2], collected_data[3], collected_data[4], collected_data[5], 
+        collected_data[6], collected_data[1], dirname=dirname)
+    plot_2(collected_data[7], dirname=dirname)
+    plot_3(collected_data[0], dirname=dirname)
